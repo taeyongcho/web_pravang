@@ -1,8 +1,10 @@
 <div class="warn-banner">
-  ⚠️ 이 사이트는 웹 취약점 진단 훈련용입니다. 실제 거래소가 아닙니다.
+  ⚠️ 훈련용 취약 웹사이트 — 실제 거래소가 아닙니다
 </div>
 <nav>
   <div class="nav-logo">PRAVANG <span>VULN LAB</span></div>
+
+  <!-- 데스크톱 링크 -->
   <div class="nav-links">
     <a href="/">홈</a>
     <% if (user) { %>
@@ -16,10 +18,12 @@
     <a href="/challenges">챌린지</a>
     <a href="/challenges/ranking">랭킹</a>
     <a href="/system/components">시스템</a>
+    <a href="/vuln" style="color:var(--accent2)">학습자료</a>
     <% if (user && user.role === 'admin') { %>
     <a href="/admin" style="color:#ff6b7a">관리자</a>
     <% } %>
   </div>
+
   <div class="nav-right">
     <% if (user) { %>
       <span class="badge <%= user.role === 'admin' ? 'admin' : '' %>"><%= user.username %></span>
@@ -29,4 +33,44 @@
       <a href="/register" class="btn btn-primary btn-sm">회원가입</a>
     <% } %>
   </div>
+
+  <!-- 햄버거 버튼 (모바일) -->
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="메뉴">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+<!-- 모바일 드로어 -->
+<div class="nav-drawer" id="nav-drawer">
+  <a href="/">🏠 홈</a>
+  <% if (user) { %>
+  <a href="/dashboard">📊 대시보드</a>
+  <a href="/trade">📈 거래소</a>
+  <a href="/dashboard/transfer">💸 송금</a>
+  <a href="/wallet">💼 지갑</a>
+  <a href="/mypage">👤 마이페이지</a>
+  <% } %>
+  <div class="drawer-divider"></div>
+  <a href="/notice">📢 공지사항</a>
+  <a href="/challenges">🎯 챌린지</a>
+  <a href="/challenges/ranking">🏆 랭킹</a>
+  <a href="/system/components">🔧 시스템</a>
+  <% if (user && user.role === 'admin') { %>
+  <a href="/admin" style="color:#ff6b7a">🛡️ 관리자</a>
+  <% } %>
+  <div class="drawer-divider"></div>
+  <% if (user) { %>
+  <div style="padding:12px 16px;color:var(--text2);font-size:13px">
+    로그인: <strong style="color:var(--text)"><%= user.username %></strong>
+    <% if (user.role === 'admin') { %><span class="badge admin" style="margin-left:6px">admin</span><% } %>
+  </div>
+  <a href="/logout" style="color:var(--red)">🚪 로그아웃</a>
+  <% } else { %>
+  <a href="/login">🔑 로그인</a>
+  <a href="/register">✏️ 회원가입</a>
+  <% } %>
+</div>
+
+<!-- 전역 JS & Toast 컨테이너 -->
+<div id="toast-container"></div>
+<script src="/js/main.js"></script>

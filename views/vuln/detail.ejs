@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= vuln.title %> - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .vuln-hero {
+      background: linear-gradient(135deg, var(--card), var(--bg2));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .vuln-hero::before {
+      content: '';
+      position: absolute; top: 0; right: 0; bottom: 0; width: 4px;
+      background: <%= vuln.severity === 'critical' ? 'var(--red)' : vuln.severity === 'high' ? '#ff6b35' : vuln.severity === 'medium' ? 'var(--yellow)' : 'var(--accent2)' %>;
+    }
+    .section { margin-bottom: 24px; }
+    .section h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .impact-list { list-style: none; padding: 0; }
+    .impact-list li { padding: 8px 0; border-bottom: 1px solid rgba(42,58,85,.4); font-size: 13px; color: var(--text2); }
+    .impact-list li::before { content: '⚡ '; color: var(--red); }
+    .remed-list { list-style: none; padding: 0; }
+    .remed-list li { padding: 8px 12px; margin-bottom: 6px; background: rgba(0,200,150,.06); border: 1px solid rgba(0,200,150,.15); border-radius: 6px; font-size: 13px; color: var(--text2); }
+    .remed-list li::before { content: '✅ '; }
+    .scenario-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+    .scenario-card a { font-size: 12px; }
+    .nav-between { display: flex; justify-content: space-between; margin-top: 32px; gap: 12px; }
+    .nav-btn { flex: 1; text-align: center; padding: 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--text2); transition: all .15s; }
+    .nav-btn:hover { border-color: var(--accent2); color: var(--text); }
+    .nav-btn strong { display: block; font-size: 14px; color: var(--text); margin-top: 4px; }
+  </style>
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container" style="max-width:900px">
+
+  <!-- 브레드크럼 -->
+  <div style="margin-bottom:16px;font-size:13px;color:var(--text2)">
+    <a href="/vuln">취약점 목록</a> <span style="margin:0 8px">›</span>
+    <span style="color:var(--text)"><%= vuln.id %></span>
+  </div>
+
+  <!-- 헤더 -->
+  <div class="vuln-hero">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-size:12px;color:var(--accent2);margin-bottom:6px;font-weight:600"><%= vuln.id %></div>
+        <h1 style="font-size:22px;font-weight:700"><%= vuln.title.replace(vuln.id + ' - ', '') %></h1>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">CVSS Score</div>
+        <div style="font-size:28px;font-weight:700;color:<%= vuln.severity === 'critical' ? 'var(--red)' : vuln.severity === 'high' ? '#ff6b35' : 'var(--yellow)' %>">
+          <%= vuln.cvss %>
+        </div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:<%= vuln.severity === 'critical' ? 'var(--red)' : vuln.severity === 'high' ? '#ff6b35' : 'var(--yellow)' %>">
+          <%= vuln.severity %>
+        </div>
+      </div>
+    </div>
+    <div class="cvss-bar cvss-<%= vuln.severity %>" style="width:<%= vuln.cvss * 10 %>%;margin-top:16px"></div>
+    <p style="color:var(--text2);font-size:13px;line-height:1.8;margin-top:16px"><%= vuln.summary %></p>
+  </div>
+
+  <div class="grid-2" style="align-items:start">
+    <!-- 영향 -->
+    <div class="card section">
+      <h3>💥 공격 시 영향</h3>
+      <ul class="impact-list">
+        <% vuln.impact.forEach(i => { %><li><%= i %></li><% }) %>
+      </ul>
+    </div>
+
+    <!-- 실습 시나리오 -->
+    <div class="card section">
+      <h3>🎯 이 사이트에서 실습하기</h3>
+      <% vuln.scenarios.forEach(s => { %>
+      <div class="scenario-card">
+        <div style="font-weight:600;margin-bottom:4px;font-size:13px"><%= s.title %></div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px"><%= s.desc %></div>
+        <a href="<%= s.path %>" class="btn btn-secondary btn-sm">실습 페이지 →</a>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- 코드 비교 -->
+  <div class="card section">
+    <h3>💻 취약 코드 vs 안전한 코드</h3>
+    <div class="code-compare">
+      <div>
+        <div class="code-label code-bad">❌ 취약한 코드</div>
+        <pre class="code-block code-bad" style="border-radius:0 0 8px 8px"><%= vuln.badCode %></pre>
+      </div>
+      <div>
+        <div class="code-label code-good">✅ 안전한 코드</div>
+        <pre class="code-block code-good" style="border-radius:0 0 8px 8px"><%= vuln.goodCode %></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 대응 방안 -->
+  <div class="card section">
+    <h3>🛡️ 대응 방안</h3>
+    <ul class="remed-list">
+      <% vuln.remediation.forEach(r => { %><li><%= r %></li><% }) %>
+    </ul>
+  </div>
+
+  <!-- 참고 자료 -->
+  <div class="card section">
+    <h3>📚 참고 자료</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <% vuln.references.forEach(r => { %>
+      <span style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text2)"><%= r %></span>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- 이전/다음 -->
+  <div class="nav-between">
+    <% if (prev) { %>
+    <a href="/vuln/<%= prev.id %>" class="nav-btn">
+      ← 이전
+      <strong><%= prev.id %></strong>
+    </a>
+    <% } else { %>
+    <div class="nav-btn" style="opacity:.3">← 이전</div>
+    <% } %>
+    <a href="/vuln" class="nav-btn" style="flex:0.5">목록</a>
+    <% if (next) { %>
+    <a href="/vuln/<%= next.id %>" class="nav-btn">
+      다음 →
+      <strong><%= next.id %></strong>
+    </a>
+    <% } else { %>
+    <div class="nav-btn" style="opacity:.3">다음 →</div>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

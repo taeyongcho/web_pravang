@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>계정 정보 - PRAVANG</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -14,7 +15,8 @@
 
   <% if (targetUser.id != user.id) { %>
   <div class="alert alert-error">
-    ⚠️ 타인의 계정 정보를 조회하고 있습니다! (IDOR 취약점 성공)
+    💥 <strong>IDOR 공격 성공!</strong> 타인의 계정 정보(비밀번호 포함)에 무단 접근했습니다.
+    <a href="/vuln/A01" style="color:var(--red);text-decoration:underline;margin-left:8px">취약점 상세 설명 →</a>
   </div>
   <% } %>
 

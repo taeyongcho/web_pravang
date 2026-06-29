@@ -43,6 +43,7 @@ app.use('/system', require('./routes/system'));
 app.use('/trade', require('./routes/trade').router);
 app.use('/wallet', require('./routes/wallet'));
 app.use('/mypage', require('./routes/mypage'));
+app.use('/vuln', require('./routes/vuln'));
 
 // 메인 페이지
 app.get('/', (req, res) => {

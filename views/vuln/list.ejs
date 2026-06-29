@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>취약점 학습 자료 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="page-title">취약점 학습 자료</div>
+  <p style="color:var(--text2);margin-bottom:24px;font-size:14px">
+    OWASP Top 10 기반 취약점 설명, 취약 코드 vs 안전한 코드 비교, 실습 가이드를 제공합니다.
+  </p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+    <% const severityColor = { critical:'var(--red)', high:'#ff6b35', medium:'var(--yellow)', low:'var(--accent2)' } %>
+    <% vulns.forEach(v => { %>
+    <a href="/vuln/<%= v.id %>" style="text-decoration:none">
+      <div class="card" style="height:100%;transition:border-color .2s;border-color:var(--border)" onmouseover="this.style.borderColor='<%= severityColor[v.severity] %>'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <span style="font-weight:700;color:var(--accent2);font-size:13px"><%= v.id %></span>
+          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.08);color:<%= severityColor[v.severity] || 'var(--text2)' %>">
+            <%= v.severity?.toUpperCase() %>  CVSS <%= v.cvss %>
+          </span>
+        </div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text)"><%= v.title.replace(v.id + ' - ', '') %></div>
+        <p style="font-size:12px;color:var(--text2);line-height:1.6"><%= v.summary.slice(0, 90) %>...</p>
+        <div style="margin-top:12px;font-size:11px;color:var(--accent)">상세 보기 →</div>
+      </div>
+    </a>
+    <% }) %>
+  </div>
+</div>
+</body>
+</html>

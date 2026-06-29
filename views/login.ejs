@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>로그인 - PRAVANG</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -17,9 +18,16 @@
 
     <% if (typeof debugQuery !== 'undefined' && debugQuery) { %>
     <div class="alert alert-warning">
-      <strong>🐛 디버그 쿼리:</strong><br>
+      <strong>🐛 디버그 쿼리 (A05 - 정보 노출):</strong><br>
       <code><%= debugQuery %></code>
     </div>
+    <% if (debugQuery.includes("'--") || debugQuery.includes("'/*")) { %>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        showAttackBanner('A03', 'A03 - SQL Injection 로그인 우회', "SQL 주석(!--)을 이용해 WHERE 절을 무력화했습니다. 비밀번호 검증이 완전히 생략됩니다.");
+      });
+    </script>
+    <% } %>
     <% } %>
 
     <form method="POST" action="/login">
