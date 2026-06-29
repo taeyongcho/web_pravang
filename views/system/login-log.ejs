@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>로그인 로그 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="page-title">
+    로그인 시도 로그
+    <span class="vuln-tag">A07 - 인증 실패</span>
+    <span class="vuln-tag">A01 - 인증 없이 접근</span>
+  </div>
+
+  <div class="alert alert-error">
+    ⚠️ 이 페이지는 로그인 없이 누구나 접근 가능합니다. 브루트포스 시도 내역이 그대로 노출됩니다.
+  </div>
+
+  <div class="card">
+    <div class="card-title">최근 로그인 시도 50건</div>
+    <% if (logs.length === 0) { %>
+    <p style="color:var(--text2);text-align:center;padding:20px">로그인 시도 기록이 없습니다.</p>
+    <% } else { %>
+    <table>
+      <tr><th>IP</th><th>아이디</th><th>결과</th><th>시각</th></tr>
+      <% logs.forEach(l => { %>
+      <tr>
+        <td><code><%= l.ip %></code></td>
+        <td><%= l.username || '-' %></td>
+        <td>
+          <% if (l.success) { %>
+          <span style="color:var(--accent);font-weight:600">✔ 성공</span>
+          <% } else { %>
+          <span style="color:var(--red)">✘ 실패</span>
+          <% } %>
+        </td>
+        <td style="color:var(--text2);font-size:12px"><%= l.attempted_at %></td>
+      </tr>
+      <% }) %>
+    </table>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

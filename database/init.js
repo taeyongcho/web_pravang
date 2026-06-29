@@ -86,6 +86,31 @@ INSERT OR IGNORE INTO vouchers (code, amount)
 VALUES
   ('PROMO2024', 50000),
   ('VIP-SECRET-777', 500000);
+
+CREATE TABLE IF NOT EXISTS solves (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  challenge_id TEXT NOT NULL,
+  solved_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, challenge_id)
+);
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ip TEXT NOT NULL,
+  username TEXT,
+  success INTEGER DEFAULT 0,
+  attempted_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  action TEXT NOT NULL,
+  detail TEXT,
+  ip TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
 `;
 
 module.exports = { initSql };

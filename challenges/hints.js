@@ -153,6 +153,36 @@ const challenges = [
       '내부 관리 API에도 접근해볼 수 있습니다.'
     ],
     flag: 'PRAVANG{ssrf_internal_access}'
+  },
+  {
+    id: 'A06-1',
+    category: 'A06 - Vulnerable & Outdated Components',
+    title: '취약한 라이브러리 버전 탐지',
+    description: '서버에서 사용 중인 라이브러리 목록을 확인하고 취약한 버전을 찾아보세요.',
+    target: '/system/components',
+    difficulty: 'easy',
+    hints: [
+      '/system/components 페이지에서 사용 중인 패키지 목록을 확인하세요.',
+      'jsonwebtoken 8.x 버전은 알려진 취약점이 있습니다.',
+      'axios 1.6.x 이전 버전에서 SSRF 관련 취약점이 보고된 바 있습니다.',
+      '각 패키지의 CVE를 검색해보세요.'
+    ],
+    flag: 'PRAVANG{A06_outdated_jwt_cve_2022_23529}'
+  },
+  {
+    id: 'A07-2',
+    category: 'A07 - Identification & Authentication Failures',
+    title: '로그인 브루트포스 공격',
+    description: '계정 잠금 없이 비밀번호를 무한 시도해 계정을 탈취해보세요.',
+    target: '/login',
+    difficulty: 'medium',
+    hints: [
+      '로그인 실패 횟수 제한이 없습니다.',
+      'Burp Suite Intruder로 비밀번호 목록을 대입해보세요.',
+      'alice의 비밀번호는 흔한 단어입니다. (rockyou.txt 상위권)',
+      '/system/login-log 에서 시도 횟수를 확인할 수 있습니다.'
+    ],
+    flag: 'PRAVANG{A07_bruteforce_no_lockout}'
   }
 ];
 

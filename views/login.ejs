@@ -39,6 +39,14 @@
       계정이 없으신가요? <a href="/register">회원가입</a>
     </div>
 
+    <% if (typeof attemptCount !== 'undefined' && attemptCount > 0) { %>
+    <div class="alert alert-error" style="margin-top:12px;font-size:12px">
+      ⚠️ 최근 10분간 <strong><%= attemptCount %>회</strong> 로그인 실패.
+      계정 잠금 없음 — 브루트포스 가능 (A07).<br>
+      <a href="/system/login-log" style="color:var(--red)">로그인 시도 로그 보기 →</a>
+    </div>
+    <% } %>
+
     <div class="alert alert-warning" style="margin-top:16px;font-size:12px">
       <strong>힌트:</strong> 이 로그인 폼은 SQL Injection에 취약합니다.<br>
       username: <code>admin'--</code> 로 시도해보세요.

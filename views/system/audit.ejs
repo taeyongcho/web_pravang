@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>감사 로그 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="page-title">
+    감사 로그 (Audit Log)
+    <span class="vuln-tag">A09 - 로깅 실패</span>
+    <span class="vuln-tag">A01 - 인증 없이 접근</span>
+  </div>
+
+  <div class="alert alert-error">
+    ⚠️ 감사 로그는 관리자만 볼 수 있어야 하지만, 인증 없이 접근 가능합니다.
+  </div>
+
+  <div class="card">
+    <div class="card-title">최근 100건</div>
+    <% if (logs.length === 0) { %>
+    <p style="color:var(--text2);text-align:center;padding:20px">로그가 없습니다.</p>
+    <% } else { %>
+    <table>
+      <tr><th>유저</th><th>액션</th><th>상세</th><th>IP</th><th>시각</th></tr>
+      <% logs.forEach(l => { %>
+      <tr>
+        <td><%= l.username || ('ID:' + l.user_id) || '-' %></td>
+        <td><code style="color:var(--accent2)"><%= l.action %></code></td>
+        <td style="color:var(--text2)"><%= l.detail || '-' %></td>
+        <td><code style="font-size:11px"><%= l.ip || '-' %></code></td>
+        <td style="color:var(--text2);font-size:12px"><%= l.created_at %></td>
+      </tr>
+      <% }) %>
+    </table>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

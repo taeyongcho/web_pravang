@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>시스템 컴포넌트 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .sev-high   { color: var(--red);    background: rgba(255,71,87,.12);  border: 1px solid rgba(255,71,87,.3); }
+    .sev-medium { color: var(--yellow); background: rgba(245,158,11,.1);  border: 1px solid rgba(245,158,11,.3); }
+    .sev-low    { color: var(--accent2);background: rgba(0,132,255,.08);  border: 1px solid rgba(0,132,255,.3); }
+    .sev-badge  { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700; }
+  </style>
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="page-title">
+    시스템 컴포넌트 정보
+    <span class="vuln-tag">A05 - 정보 노출</span>
+    <span class="vuln-tag">A06 - 취약 컴포넌트</span>
+  </div>
+
+  <div class="alert alert-warning">
+    ⚠️ 이 페이지는 서버의 런타임 정보와 패키지 버전을 그대로 노출합니다. (취약점 시나리오)
+  </div>
+
+  <!-- 서버 환경 정보 -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">서버 환경 정보 (A05 - Security Misconfiguration)</div>
+    <table>
+      <tr><th>항목</th><th>값</th></tr>
+      <tr><td>Node.js 버전</td><td><code><%= nodeVersion %></code></td></tr>
+      <tr><td>플랫폼</td><td><code><%= platform %></code></td></tr>
+      <tr><td>실행 환경</td><td><code><%= env %></code></td></tr>
+      <tr><td>서버 시간</td><td><code><%= new Date().toISOString() %></code></td></tr>
+    </table>
+  </div>
+
+  <!-- 패키지 목록 -->
+  <div class="card">
+    <div class="card-title">설치된 패키지 (A06 - Vulnerable & Outdated Components)</div>
+    <table>
+      <tr><th>패키지명</th><th>버전</th><th>CVE</th><th>위험도</th><th>설명</th></tr>
+      <% deps.forEach(d => { %>
+      <tr>
+        <td><strong><%= d.name %></strong></td>
+        <td><code><%= d.version %></code></td>
+        <td>
+          <% if (d.cve) { %>
+          <code style="color:var(--red)"><%= d.cve %></code>
+          <% } else { %>
+          <span style="color:var(--text2)">-</span>
+          <% } %>
+        </td>
+        <td>
+          <% if (d.severity) { %>
+          <span class="sev-badge sev-<%= d.severity.toLowerCase() %>"><%= d.severity %></span>
+          <% } else { %>
+          <span style="color:var(--text2);font-size:12px">-</span>
+          <% } %>
+        </td>
+        <td style="color:var(--text2);font-size:12px;max-width:400px">
+          <%= d.description || '-' %>
+        </td>
+      </tr>
+      <% }) %>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">챌린지 A06-1 FLAG 획득 조건</div>
+    <p style="color:var(--text2);font-size:13px;line-height:1.8">
+      이 페이지를 통해 <code>jsonwebtoken 8.5.1</code>이 <strong>CVE-2022-23529</strong>에 취약함을 확인했습니다.<br>
+      해당 CVE 번호를 확인했다면 챌린지 페이지에서 FLAG를 제출하세요.
+    </p>
+    <a href="/challenges" class="btn btn-primary btn-sm" style="margin-top:12px">FLAG 제출하러 가기</a>
+  </div>
+</div>
+</body>
+</html>

@@ -38,16 +38,12 @@ app.use('/dashboard', require('./routes/dashboard'));
 app.use('/notice', require('./routes/notice'));
 app.use('/admin', require('./routes/admin'));
 app.use('/api', require('./routes/api'));
+app.use('/challenges', require('./routes/challenges'));
+app.use('/system', require('./routes/system'));
 
 // 메인 페이지
 app.get('/', (req, res) => {
   res.render('index', { user: req.session.user || null });
-});
-
-// 챌린지 목록
-app.get('/challenges', (req, res) => {
-  const challenges = require('./challenges/hints');
-  res.render('challenges', { challenges, user: req.session.user || null });
 });
 
 // A05: 상세 에러 메시지 노출

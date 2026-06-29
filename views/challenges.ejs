@@ -4,48 +4,159 @@
   <meta charset="UTF-8">
   <title>챌린지 - PRAVANG</title>
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .progress-bar-wrap {
+      background: var(--border);
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+      margin: 8px 0 4px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+    .challenge-card.solved {
+      border-color: rgba(0,200,150,.4);
+      background: rgba(0,200,150,.04);
+    }
+    .solved-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(0,200,150,.15);
+      color: var(--accent);
+      border: 1px solid rgba(0,200,150,.3);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .flag-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .flag-form input {
+      flex: 1;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+    }
+    .result-ok  { color: var(--accent);  font-size: 13px; margin-top: 8px; }
+    .result-err { color: var(--red);     font-size: 13px; margin-top: 8px; }
+    .cat-header {
+      font-size: 13px;
+      color: var(--accent);
+      margin: 24px 0 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+  </style>
 </head>
 <body>
 <%- include('partials/nav') %>
 <div class="container">
-  <div class="page-title">취약점 챌린지 목록</div>
 
-  <div class="alert alert-warning">
-    ⚠️ 이 챌린지들은 교육 목적으로만 사용하세요. 실제 서비스에 적용 시 법적 처벌을 받을 수 있습니다.
+  <!-- 헤더 & 진행률 -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;gap:24px;flex-wrap:wrap">
+    <div>
+      <div class="page-title" style="margin-bottom:4px">취약점 챌린지</div>
+      <div style="color:var(--text2);font-size:13px">OWASP Top 10 기반 시나리오 | 총 <%= challenges.length %>개</div>
+    </div>
+    <% if (user) { %>
+    <div class="card" style="min-width:220px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--text2)">내 진행률</span>
+        <span style="font-weight:700;color:var(--accent)"><%= solvedIds.length %> / <%= challenges.length %></span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" style="width:<%= Math.round(solvedIds.length/challenges.length*100) %>%"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px"><%= Math.round(solvedIds.length/challenges.length*100) %>% 완료</div>
+    </div>
+    <% } %>
   </div>
 
+  <!-- FLAG 제출 결과 메시지 -->
+  <% if (submitResult) { %>
+  <div class="alert <%= submitResult.success ? 'alert-success' : 'alert-error' %>" style="margin-bottom:20px">
+    <% if (submitResult.success && !submitResult.alreadySolved) { %>
+    🎉 <%= submitResult.message %>
+    <% } else if (submitResult.alreadySolved) { %>
+    ✅ <%= submitResult.message %>
+    <% } else { %>
+    ❌ <%= submitResult.message %>
+    <% } %>
+  </div>
+  <% } %>
+
+  <div class="alert alert-warning" style="margin-bottom:20px">
+    ⚠️ 교육 목적 전용입니다. 실제 서비스에 동일 기법을 사용하는 것은 불법입니다.
+    <% if (!user) { %> | <a href="/login">로그인</a>하면 진행률을 저장할 수 있습니다.<% } %>
+  </div>
+
+  <!-- 랭킹 링크 -->
+  <div style="text-align:right;margin-bottom:16px">
+    <a href="/challenges/ranking" class="btn btn-secondary btn-sm">🏆 랭킹 보기</a>
+  </div>
+
+  <!-- 챌린지 목록 -->
   <% const categories = [...new Set(challenges.map(c => c.category))] %>
   <% categories.forEach(cat => { %>
-  <div style="margin-bottom:24px">
-    <h3 style="font-size:14px;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)"><%= cat %></h3>
-    <% challenges.filter(c => c.category === cat).forEach(ch => { %>
-    <div class="challenge-card">
+    <div class="cat-header"><%= cat %></div>
+    <% challenges.filter(c => c.category === cat).forEach(ch => {
+         const isSolved = solvedIds.includes(ch.id);
+    %>
+    <div class="challenge-card <%= isSolved ? 'solved' : '' %>">
       <div class="challenge-header">
         <span class="difficulty <%= ch.difficulty %>"><%= ch.difficulty.toUpperCase() %></span>
-        <strong><%= ch.title %></strong>
-        <span style="color:var(--text2);font-size:12px">(<%= ch.id %>)</span>
+        <strong style="flex:1"><%= ch.title %></strong>
+        <span style="color:var(--text2);font-size:11px;margin-right:8px"><%= ch.id %></span>
+        <% if (isSolved) { %>
+        <span class="solved-badge">✔ SOLVED</span>
+        <% } %>
       </div>
-      <p style="color:var(--text2);font-size:13px;margin-bottom:10px"><%= ch.description %></p>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">
+
+      <p style="color:var(--text2);font-size:13px;margin-bottom:8px"><%= ch.description %></p>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px">
         대상: <code><%= ch.target %></code>
       </div>
+
+      <!-- 힌트 -->
       <details>
-        <summary style="cursor:pointer;font-size:12px;color:var(--accent2);user-select:none">힌트 보기</summary>
-        <ul class="hint-list" style="margin-top:8px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--accent2);user-select:none;margin-bottom:4px">💡 힌트 보기 (<%= ch.hints.length %>단계)</summary>
+        <ol style="margin:8px 0 0 16px;color:var(--text2);font-size:13px;line-height:2">
           <% ch.hints.forEach(h => { %>
-          <li class="hint-item"><%= h %></li>
+          <li><%= h %></li>
           <% }) %>
-        </ul>
-        <div style="margin-top:8px;font-size:12px">
-          <details>
-            <summary style="cursor:pointer;color:var(--red);user-select:none">FLAG 보기</summary>
-            <code style="margin-top:6px;display:block;color:var(--accent)"><%= ch.flag %></code>
-          </details>
-        </div>
+        </ol>
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer;font-size:12px;color:var(--red);user-select:none">🚩 FLAG 직접 보기 (스포일러)</summary>
+          <code style="display:block;margin-top:6px;color:var(--accent);padding:6px"><%= ch.flag %></code>
+        </details>
       </details>
+
+      <!-- FLAG 제출 폼 -->
+      <% if (user) { %>
+      <% if (isSolved) { %>
+      <div style="margin-top:10px;font-size:13px;color:var(--accent)">✔ 이 챌린지를 완료했습니다.</div>
+      <% } else { %>
+      <form class="flag-form" method="POST" action="/challenges/submit">
+        <input type="hidden" name="challenge_id" value="<%= ch.id %>">
+        <input type="text" name="flag" placeholder="PRAVANG{...} 형식으로 FLAG 입력" autocomplete="off">
+        <button type="submit" class="btn btn-primary btn-sm">제출</button>
+      </form>
+      <% } %>
+      <% } else { %>
+      <div style="margin-top:10px;font-size:12px;color:var(--text2)">
+        FLAG를 제출하려면 <a href="/login">로그인</a>하세요.
+      </div>
+      <% } %>
     </div>
     <% }) %>
-  </div>
   <% }) %>
 </div>
 </body>

@@ -1,17 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const { get, run, rawQuery, saveDb } = require('../database/db');
-const md5 = require('md5');
 
 // 로그인 페이지
 router.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/dashboard');
-  res.render('login', { error: null, user: null });
+  res.render('login', { error: null, user: null, attemptCount: 0 });
 });
 
 // A03: SQL Injection - 로그인 쿼리를 문자열 연결로 구성
+// A07: 브루트포스 카운터 (잠금은 없음 - 훈련용으로 횟수만 기록)
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
+  const ip = req.ip || req.connection.remoteAddress;
 
   // 취약한 쿼리 (SQL Injection 가능)
   const query = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
@@ -19,10 +20,13 @@ router.post('/login', (req, res) => {
   const result = rawQuery(query);
 
   if (!result.success) {
+    run('INSERT INTO login_attempts (ip, username, success) VALUES (?, ?, 0)', [ip, username]);
+    saveDb();
     return res.render('login', {
       error: `DB 오류: ${result.error}`,
       user: null,
-      debugQuery: query
+      debugQuery: query,
+      attemptCount: getAttemptCount(ip)
     });
   }
 
@@ -32,6 +36,11 @@ router.post('/login', (req, res) => {
     const vals = rows.values[0];
     const user = {};
     cols.forEach((c, i) => { user[c] = vals[i]; });
+
+    run('INSERT INTO login_attempts (ip, username, success) VALUES (?, ?, 1)', [ip, username]);
+    run('INSERT INTO audit_logs (user_id, action, detail, ip) VALUES (?, ?, ?, ?)',
+      [user.id, 'LOGIN_SUCCESS', username, ip]);
+    saveDb();
 
     // A07: 세션 재생성 없이 로그인 (세션 고정 취약점)
     req.session.user = {
@@ -43,12 +52,31 @@ router.post('/login', (req, res) => {
     return res.redirect('/dashboard');
   }
 
+  // 실패 기록
+  run('INSERT INTO login_attempts (ip, username, success) VALUES (?, ?, 0)', [ip, username]);
+  saveDb();
+
+  const attemptCount = getAttemptCount(ip);
+
   res.render('login', {
     error: '아이디 또는 비밀번호가 올바르지 않습니다.',
     user: null,
-    debugQuery: query  // A05: 디버그 정보 노출
+    debugQuery: query,  // A05: 디버그 정보 노출
+    attemptCount
   });
 });
+
+function getAttemptCount(ip) {
+  try {
+    const row = get(
+      "SELECT COUNT(*) as cnt FROM login_attempts WHERE ip = ? AND success = 0 AND attempted_at > datetime('now', '-10 minutes')",
+      [ip]
+    );
+    return row ? row.cnt : 0;
+  } catch (e) {
+    return 0;
+  }
+}
 
 // 회원가입 페이지
 router.get('/register', (req, res) => {
@@ -65,10 +93,8 @@ router.post('/register', (req, res) => {
   }
 
   // 비밀번호를 평문으로 저장 (취약점)
-  run(
-    'INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
-    [username, password, email]
-  );
+  run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', [username, password, email]);
+  saveDb();
 
   res.redirect('/login');
 });
