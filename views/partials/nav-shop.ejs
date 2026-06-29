@@ -1,44 +1,57 @@
-<nav class="nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo" style="text-decoration:none">AXIO <span>MALL</span></a>
-    <div class="nav-links">
-      <a href="/shop">상품목록</a>
-      <% if (user) { %>
-      <a href="/shop/cart">🛒 장바구니</a>
-      <a href="/shop/orders">주문내역</a>
-      <% } %>
-      <a href="/challenges">챌린지</a>
-      <a href="/" style="color:var(--text2);font-size:12px">← 허브</a>
-      <div class="nav-user">
-        <% if (user) { %>
-        <span class="badge <%= user.role === 'admin' ? 'admin' : '' %>"><%= user.username %></span>
-        <a href="/logout" class="btn btn-secondary btn-sm">로그아웃</a>
-        <% } else { %>
-        <a href="/login" class="btn btn-primary btn-sm">로그인</a>
-        <% } %>
-      </div>
-    </div>
-    <button class="hamburger" id="hamburger" aria-label="메뉴">
-      <span></span><span></span><span></span>
-    </button>
-  </div>
-  <div class="mobile-nav" id="mobileNav">
+<div class="warn-banner">
+  ⚠️ 훈련용 취약 웹사이트 — 실제 쇼핑몰이 아닙니다
+</div>
+<nav>
+  <div class="nav-logo">AXIO <span>MALL</span></div>
+
+  <!-- 데스크톱 링크 -->
+  <div class="nav-links">
     <a href="/shop">상품목록</a>
     <% if (user) { %>
     <a href="/shop/cart">🛒 장바구니</a>
     <a href="/shop/orders">주문내역</a>
     <% } %>
-    <a href="/challenges">챌린지 🚩</a>
-    <a href="/">← 메인 허브</a>
+    <a href="/challenges">챌린지</a>
+    <a href="/" style="color:var(--text2)">← 메인 허브</a>
+  </div>
+
+  <div class="nav-right">
     <% if (user) { %>
-    <div class="mobile-user">
-      <span><%= user.username %></span> ·
-      <a href="/logout">로그아웃</a>
-    </div>
+      <span class="badge <%= user.role === 'admin' ? 'admin' : '' %>"><%= user.username %></span>
+      <a href="/logout" class="btn btn-secondary btn-sm">로그아웃</a>
     <% } else { %>
-    <a href="/login">로그인</a>
+      <a href="/login" class="btn btn-secondary btn-sm">로그인</a>
+      <a href="/register" class="btn btn-primary btn-sm">회원가입</a>
     <% } %>
   </div>
+
+  <!-- 햄버거 버튼 (모바일) -->
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="메뉴">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+<!-- 모바일 드로어 -->
+<div class="nav-drawer" id="nav-drawer">
+  <a href="/shop">🛍️ 상품목록</a>
+  <% if (user) { %>
+  <a href="/shop/cart">🛒 장바구니</a>
+  <a href="/shop/orders">📦 주문내역</a>
+  <% } %>
+  <div class="drawer-divider"></div>
+  <a href="/challenges">🎯 챌린지</a>
+  <a href="/">🏠 메인 허브</a>
+  <div class="drawer-divider"></div>
+  <% if (user) { %>
+  <div style="padding:12px 16px;color:var(--text2);font-size:13px">
+    로그인: <strong style="color:var(--text)"><%= user.username %></strong>
+  </div>
+  <a href="/logout" style="color:var(--red)">🚪 로그아웃</a>
+  <% } else { %>
+  <a href="/login">🔑 로그인</a>
+  <a href="/register">✏️ 회원가입</a>
+  <% } %>
+</div>
+
 <div id="toast-container"></div>
 <script src="/js/main.js"></script>

@@ -68,15 +68,18 @@
       <div style="color:var(--text2);font-size:13px">OWASP Top 10 기반 시나리오 | 총 <%= challenges.length %>개</div>
     </div>
     <% if (user) { %>
-    <div class="card" style="min-width:220px;padding:16px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <div class="card" style="min-width:240px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <span style="font-size:12px;color:var(--text2)">내 진행률</span>
         <span style="font-weight:700;color:var(--accent)"><%= solvedIds.length %> / <%= challenges.length %></span>
       </div>
       <div class="progress-bar-wrap">
         <div class="progress-bar-fill" style="width:<%= Math.round(solvedIds.length/challenges.length*100) %>%"></div>
       </div>
-      <div style="font-size:11px;color:var(--text2);margin-top:4px"><%= Math.round(solvedIds.length/challenges.length*100) %>% 완료</div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px">
+        <span style="font-size:11px;color:var(--text2)"><%= Math.round(solvedIds.length/challenges.length*100) %>% 완료</span>
+        <span style="font-size:13px;font-weight:700;color:var(--accent)">🏅 <%= myScore.toLocaleString() %> <span style="color:var(--text2);font-weight:400;font-size:11px">/ <%= maxScore.toLocaleString() %>pt</span></span>
+      </div>
     </div>
     <% } %>
   </div>
@@ -90,6 +93,9 @@
     ✅ <%= submitResult.message %>
     <% } else { %>
     ❌ <%= submitResult.message %>
+    <% } %>
+    <% if (submitResult.success && !submitResult.alreadySolved) { %>
+    &nbsp;· 현재 점수: <strong><%= myScore.toLocaleString() %>pt</strong>
     <% } %>
   </div>
   <% } %>
@@ -116,6 +122,7 @@
         <span class="difficulty <%= ch.difficulty %>"><%= ch.difficulty.toUpperCase() %></span>
         <strong style="flex:1"><%= ch.title %></strong>
         <span style="color:var(--text2);font-size:11px;margin-right:8px"><%= ch.id %></span>
+        <span style="font-size:12px;font-weight:700;color:<%= ch.difficulty==='hard'?'#f59e0b':ch.difficulty==='medium'?'var(--accent2)':'var(--text2)' %>;margin-right:8px"><%= SCORE[ch.difficulty] %>pt</span>
         <% if (isSolved) { %>
         <span class="solved-badge">✔ SOLVED</span>
         <% } %>
