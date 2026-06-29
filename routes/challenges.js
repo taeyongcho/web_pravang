@@ -116,4 +116,74 @@ router.get('/ranking', (req, res) => {
   res.render('ranking', { ranking, user: req.session.user || null, total: challenges.length, maxScore });
 });
 
+// 힌트 사용 API (단계별 공개 + 감점)
+router.post('/hint', requireLogin, (req, res) => {
+  const { challenge_id, hint_index } = req.body;
+  const ch = challenges.find(c => c.id === challenge_id);
+  if (!ch) return res.json({ error: '챌린지 없음' });
+
+  const idx = parseInt(hint_index);
+  if (idx < 0 || idx >= ch.hints.length) return res.json({ error: '잘못된 힌트 인덱스' });
+
+  // 이미 이 힌트를 본 적 있는지 확인
+  const already = get('SELECT id FROM hint_uses WHERE user_id=? AND challenge_id=? AND hint_index=?',
+    [req.session.user.id, challenge_id, idx]);
+
+  if (!already) {
+    run('INSERT OR IGNORE INTO hint_uses (user_id, challenge_id, hint_index) VALUES (?,?,?)',
+      [req.session.user.id, challenge_id, idx]);
+    saveDb();
+  }
+
+  // 현재까지 사용한 힌트 수
+  const usedCount = (get('SELECT COUNT(*) as c FROM hint_uses WHERE user_id=? AND challenge_id=?',
+    [req.session.user.id, challenge_id]) || {}).c || 0;
+
+  res.json({
+    hint: ch.hints[idx],
+    hint_index: idx,
+    total_hints: ch.hints.length,
+    used_count: usedCount,
+    penalty: already ? 0 : 10,
+    already_seen: !!already
+  });
+});
+
+// 내가 사용한 힌트 목록 API
+router.get('/hints-used', requireLogin, (req, res) => {
+  const rows = all('SELECT challenge_id, hint_index FROM hint_uses WHERE user_id=?', [req.session.user.id]);
+  const map = {};
+  rows.forEach(r => {
+    if (!map[r.challenge_id]) map[r.challenge_id] = [];
+    map[r.challenge_id].push(r.hint_index);
+  });
+  res.json(map);
+});
+
+// 수료증 페이지
+router.get('/certificate', requireLogin, (req, res) => {
+  const solvedRows = all('SELECT challenge_id, solved_at FROM solves WHERE user_id=? ORDER BY solved_at ASC',
+    [req.session.user.id]);
+  const solvedIds = solvedRows.map(r => r.challenge_id);
+
+  // 힌트 감점 계산
+  const hintPenalty = ((get('SELECT COUNT(*) as c FROM hint_uses WHERE user_id=?',
+    [req.session.user.id]) || {}).c || 0) * 10;
+
+  const baseScore = calcScore(solvedIds);
+  const finalScore = Math.max(0, baseScore - hintPenalty);
+  const maxScore = challenges.reduce((t, c) => t + (SCORE[c.difficulty] || 100), 0);
+  const pct = Math.round(solvedIds.length / challenges.length * 100);
+  const lastSolved = solvedRows.length ? solvedRows[solvedRows.length - 1].solved_at : null;
+
+  res.render('challenges/certificate', {
+    user: req.session.user,
+    solvedCount: solvedIds.length,
+    totalCount: challenges.length,
+    baseScore, finalScore, maxScore, hintPenalty, pct,
+    lastSolved,
+    isComplete: solvedIds.length === challenges.length
+  });
+});
+
 module.exports = router;

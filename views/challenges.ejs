@@ -166,18 +166,33 @@
         대상: <code><%= ch.target %></code>
       </div>
 
-      <!-- 힌트 -->
-      <details>
-        <summary style="cursor:pointer;font-size:12px;color:var(--accent2);user-select:none;margin-bottom:4px">💡 힌트 보기 (<%= ch.hints.length %>단계)</summary>
-        <ol style="margin:8px 0 0 16px;color:var(--text2);font-size:13px;line-height:2">
-          <% ch.hints.forEach(h => { %>
-          <li><%= h %></li>
-          <% }) %>
+      <!-- 힌트 (단계별 공개, 힌트당 -10pt) -->
+      <% if (!isSolved) { %>
+      <div class="hint-section" id="hint-<%= ch.id %>">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:12px;color:var(--text2)">💡 힌트</span>
+          <span style="font-size:11px;color:var(--red)">힌트 1개당 -10pt</span>
+          <div style="flex:1"></div>
+          <% if (user) { %>
+          <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="revealHint('<%= ch.id %>', 0, <%= ch.hints.length %>)">
+            힌트 1 보기
+          </button>
+          <% } %>
+        </div>
+        <div id="hints-<%= ch.id %>" style="display:none"></div>
+      </div>
+      <% } else { %>
+      <details style="margin-top:8px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--text2);user-select:none">풀이 힌트 보기</summary>
+        <ol style="margin:8px 0 0 16px;color:var(--text2);font-size:12px;line-height:2">
+          <% ch.hints.forEach(h => { %><li><%= h %></li><% }) %>
         </ol>
-        <details style="margin-top:8px">
-          <summary style="cursor:pointer;font-size:12px;color:var(--red);user-select:none">🚩 FLAG 직접 보기 (스포일러)</summary>
-          <code style="display:block;margin-top:6px;color:var(--accent);padding:6px"><%= ch.flag %></code>
-        </details>
+      </details>
+      <% } %>
+
+      <details style="margin-top:6px">
+        <summary style="cursor:pointer;font-size:11px;color:var(--red);user-select:none">🚩 FLAG 직접 보기 (스포일러 주의)</summary>
+        <code style="display:block;margin-top:6px;color:var(--accent);padding:6px;font-size:12px"><%= ch.flag %></code>
       </details>
 
       <!-- FLAG 제출 폼 -->
@@ -199,6 +214,68 @@
     </div>
     <% }) %>
   <% }) %>
+
+  <!-- 수료증 링크 (로그인 시) -->
+  <% if (user) { %>
+  <div class="card" style="margin-top:32px;text-align:center;padding:24px">
+    <div style="font-size:16px;font-weight:700;margin-bottom:8px">
+      <% if (solvedIds.length === challenges.length) { %>
+      🎉 모든 챌린지를 완료했습니다!
+      <% } else { %>
+      📜 수료증 미리보기
+      <% } %>
+    </div>
+    <div style="color:var(--text2);font-size:13px;margin-bottom:16px">
+      현재 <%= solvedIds.length %>/<%= challenges.length %>개 완료 · <%= myScore %>pt
+      <% if (solvedIds.length === challenges.length) { %>
+       · <strong style="color:var(--accent)">수료 조건 달성!</strong>
+      <% } %>
+    </div>
+    <a href="/challenges/certificate" class="btn btn-primary">🏆 수료증 보기</a>
+  </div>
+  <% } %>
 </div>
+
+<script>
+const hintState = {}; // { [challengeId]: { revealed: [0,1,...], nextIndex: N } }
+
+async function revealHint(challengeId, index, total) {
+  if (!hintState[challengeId]) hintState[challengeId] = { revealed: [], nextIndex: 0 };
+  const state = hintState[challengeId];
+  const nextIdx = state.nextIndex;
+
+  const res = await fetch('/challenges/hint', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `challenge_id=${challengeId}&hint_index=${nextIdx}`
+  });
+  const data = await res.json();
+  if (data.error) return;
+
+  const container = document.getElementById('hints-' + challengeId);
+  container.style.display = 'block';
+
+  // 힌트 항목 추가
+  const item = document.createElement('div');
+  item.style.cssText = 'padding:8px 12px;background:var(--bg);border-radius:6px;font-size:13px;color:var(--text2);margin-bottom:6px;border-left:3px solid var(--accent2)';
+  item.innerHTML = `<span style="color:var(--accent2);font-weight:600">힌트 ${nextIdx + 1}</span>${data.already_seen ? '' : ' <span style="color:var(--red);font-size:11px">-10pt</span>'}: ${data.hint}`;
+  container.appendChild(item);
+
+  state.revealed.push(nextIdx);
+  state.nextIndex = nextIdx + 1;
+
+  // 다음 힌트 버튼 업데이트
+  const section = document.getElementById('hint-' + challengeId);
+  const btn = section.querySelector('button');
+  if (state.nextIndex < total) {
+    btn.textContent = `힌트 ${state.nextIndex + 1} 보기`;
+    btn.onclick = () => revealHint(challengeId, state.nextIndex, total);
+  } else {
+    btn.textContent = '힌트 모두 봄';
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+  }
+}
+</script>
 </body>
 </html>

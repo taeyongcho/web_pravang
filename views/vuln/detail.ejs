@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= vuln.title %> - AXIO</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
   <style>
     .vuln-hero {
       background: linear-gradient(135deg, var(--card), var(--bg2));
@@ -94,12 +95,18 @@
     <h3>💻 취약 코드 vs 안전한 코드</h3>
     <div class="code-compare">
       <div>
-        <div class="code-label code-bad">❌ 취약한 코드</div>
-        <pre class="code-block code-bad" style="border-radius:0 0 8px 8px"><%= vuln.badCode %></pre>
+        <div class="code-label code-bad" style="display:flex;align-items:center;justify-content:space-between">
+          <span>❌ 취약한 코드</span>
+          <button class="btn-copy btn-sm" style="font-size:10px;background:none;border:1px solid rgba(255,71,87,.4);color:#ff4757;padding:2px 8px;border-radius:4px;cursor:pointer" onclick="copyCode(this)">복사</button>
+        </div>
+        <pre style="border-radius:0 0 8px 8px;margin:0;overflow:auto;border:1px solid rgba(255,71,87,.2);border-top:none"><code class="language-javascript"><%= vuln.badCode %></code></pre>
       </div>
       <div>
-        <div class="code-label code-good">✅ 안전한 코드</div>
-        <pre class="code-block code-good" style="border-radius:0 0 8px 8px"><%= vuln.goodCode %></pre>
+        <div class="code-label code-good" style="display:flex;align-items:center;justify-content:space-between">
+          <span>✅ 안전한 코드</span>
+          <button class="btn-copy btn-sm" style="font-size:10px;background:none;border:1px solid rgba(0,200,150,.4);color:var(--accent);padding:2px 8px;border-radius:4px;cursor:pointer" onclick="copyCode(this)">복사</button>
+        </div>
+        <pre style="border-radius:0 0 8px 8px;margin:0;overflow:auto;border:1px solid rgba(0,200,150,.2);border-top:none"><code class="language-javascript"><%= vuln.goodCode %></code></pre>
       </div>
     </div>
   </div>
@@ -143,5 +150,18 @@
     <% } %>
   </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+hljs.highlightAll();
+function copyCode(btn) {
+  const pre = btn.closest('div').nextElementSibling;
+  const text = pre.querySelector('code').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '복사됨!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+</script>
 </body>
 </html>

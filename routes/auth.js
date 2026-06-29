@@ -110,6 +110,7 @@ router.post('/register', (req, res) => {
   // 비밀번호를 평문으로 저장 (취약점)
   run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', [username, password, email]);
   run('UPDATE invite_codes SET used_count = used_count + 1 WHERE id = ?', [code.id]);
+  run('INSERT INTO invite_code_uses (code_id, code, username) VALUES (?, ?, ?)', [code.id, invite_code, username]);
   saveDb();
 
   res.redirect('/login');

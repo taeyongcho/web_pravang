@@ -152,7 +152,12 @@ router.get('/shell-view', requireAdmin, (req, res) => {
 // 초대 코드 관리
 router.get('/invite-codes', requireAdmin, (req, res) => {
   const codes = all('SELECT * FROM invite_codes ORDER BY created_at DESC');
-  res.render('admin/invite-codes', { user: req.session.user, codes, success: req.query.success, error: req.query.error });
+  const uses = all(`
+    SELECT icu.*, ic.memo FROM invite_code_uses icu
+    LEFT JOIN invite_codes ic ON icu.code_id = ic.id
+    ORDER BY icu.used_at DESC LIMIT 50
+  `);
+  res.render('admin/invite-codes', { user: req.session.user, codes, uses, success: req.query.success, error: req.query.error });
 });
 
 router.post('/invite-codes/create', requireAdmin, (req, res) => {

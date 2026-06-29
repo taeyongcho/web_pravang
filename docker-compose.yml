@@ -1,0 +1,22 @@
+services:
+  axio:
+    build: .
+    container_name: seclab
+    restart: unless-stopped
+    expose:
+      - "3000"
+    volumes:
+      - axio-db:/app/database
+      - axio-uploads:/app/public/uploads
+    environment:
+      - NODE_ENV=production
+    networks:
+      - security-portal_default
+
+volumes:
+  axio-db:
+  axio-uploads:
+
+networks:
+  security-portal_default:
+    external: true

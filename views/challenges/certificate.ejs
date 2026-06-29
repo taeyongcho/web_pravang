@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>수료증 - AXIO VULN LAB</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .cert-wrap {
+      max-width: 720px; margin: 40px auto; padding: 0 20px;
+    }
+    .cert-card {
+      background: var(--card);
+      border: 2px solid var(--accent);
+      border-radius: 20px;
+      padding: 48px 56px;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+    .cert-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at top, rgba(0,200,150,.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cert-watermark {
+      position: absolute;
+      font-size: 120px; opacity: .04; font-weight: 900;
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      user-select: none; pointer-events: none;
+      white-space: nowrap;
+    }
+    .cert-logo { font-size: 13px; color: var(--text2); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+    .cert-title { font-size: 28px; font-weight: 700; margin-bottom: 32px; color: var(--accent); }
+    .cert-issued { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+    .cert-name { font-size: 36px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+    .cert-name-under { width: 300px; height: 1px; background: var(--border); margin: 0 auto 28px; }
+    .cert-body { font-size: 14px; color: var(--text2); line-height: 2; margin-bottom: 32px; }
+    .cert-score-box {
+      display: inline-flex; gap: 32px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 32px; margin-bottom: 32px;
+    }
+    .cert-score-item .val { font-size: 24px; font-weight: 700; color: var(--accent); }
+    .cert-score-item .lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .cert-footer {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      border-top: 1px solid var(--border); padding-top: 24px; margin-top: 8px;
+    }
+    .cert-seal {
+      width: 64px; height: 64px; border: 3px solid var(--accent);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+    }
+    .cert-incomplete {
+      background: rgba(255,71,87,.06); border-color: var(--border);
+    }
+    .cert-incomplete .cert-title { color: var(--text2); }
+    .cert-incomplete .cert-seal { border-color: var(--border); }
+    .grade-badge {
+      display: inline-block; padding: 4px 16px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; margin-bottom: 16px;
+    }
+    .grade-s { background: rgba(0,200,150,.15); color: var(--accent); border: 1px solid rgba(0,200,150,.3); }
+    .grade-a { background: rgba(0,132,255,.15); color: var(--accent2); border: 1px solid rgba(0,132,255,.3); }
+    .grade-b { background: rgba(245,158,11,.15); color: #f59e0b; border: 1px solid rgba(245,158,11,.3); }
+    .grade-c { background: rgba(100,116,139,.1); color: var(--text2); border: 1px solid var(--border); }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; }
+      .cert-card { border-color: #00c896 !important; }
+    }
+  </style>
+</head>
+<body>
+<%- include('../partials/nav') %>
+
+<div class="cert-wrap">
+  <!-- 액션 버튼 -->
+  <div class="no-print" style="display:flex;gap:8px;margin-bottom:20px;align-items:center">
+    <a href="/challenges" class="btn btn-secondary btn-sm">← 챌린지 목록</a>
+    <div style="flex:1"></div>
+    <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ 인쇄 / PDF 저장</button>
+  </div>
+
+  <!-- 수료증 본문 -->
+  <div class="cert-card <%= isComplete ? '' : 'cert-incomplete' %>">
+    <div class="cert-watermark">AXIO</div>
+
+    <div class="cert-logo">AXIO VULN LAB · 웹 취약점 모의훈련 센터</div>
+    <div class="cert-title">
+      <% if (isComplete) { %>
+      🏆 훈련 수료증
+      <% } else { %>
+      📄 훈련 진행 현황
+      <% } %>
+    </div>
+
+    <div class="cert-issued">이 증서는 아래 훈련생이</div>
+    <div class="cert-name"><%= user.username %></div>
+    <div class="cert-name-under"></div>
+
+    <%
+      let grade, gradeClass;
+      const scorePct = maxScore > 0 ? finalScore / maxScore * 100 : 0;
+      if (isComplete && scorePct >= 90) { grade = 'S'; gradeClass = 'grade-s'; }
+      else if (isComplete && scorePct >= 70) { grade = 'A'; gradeClass = 'grade-a'; }
+      else if (isComplete || scorePct >= 50) { grade = 'B'; gradeClass = 'grade-b'; }
+      else { grade = 'C'; gradeClass = 'grade-c'; }
+    %>
+    <div><span class="grade-badge <%= gradeClass %>">등급 <%= grade %></span></div>
+
+    <div class="cert-body">
+      OWASP Top 10 기반 웹 취약점 모의훈련 과정에서<br>
+      총 <strong style="color:var(--text)"><%= solvedCount %></strong>/<strong style="color:var(--text)"><%= totalCount %></strong>개의 챌린지를 완료하고
+      <% if (isComplete) { %>
+      전 과정을 성공적으로 수료하였음을 증명합니다.
+      <% } else { %>
+      현재 훈련을 진행 중임을 확인합니다.
+      <% } %>
+    </div>
+
+    <div class="cert-score-box">
+      <div class="cert-score-item">
+        <div class="val"><%= solvedCount %>/<%= totalCount %></div>
+        <div class="lbl">완료 챌린지</div>
+      </div>
+      <div class="cert-score-item">
+        <div class="val"><%= finalScore.toLocaleString() %>pt</div>
+        <div class="lbl">최종 점수 <% if(hintPenalty > 0) { %><span style="color:var(--red);font-size:10px">(힌트 -<%= hintPenalty %>pt)</span><% } %></div>
+      </div>
+      <div class="cert-score-item">
+        <div class="val"><%= pct %>%</div>
+        <div class="lbl">달성률</div>
+      </div>
+    </div>
+
+    <div class="cert-footer">
+      <div style="text-align:left">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">발행일</div>
+        <div style="font-size:13px;font-weight:600"><%= new Date().toISOString().slice(0,10) %></div>
+        <% if (lastSolved) { %>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px">마지막 풀이: <%= lastSolved.slice(0,16) %></div>
+        <% } %>
+      </div>
+      <div style="text-align:center">
+        <div class="cert-seal"><%= isComplete ? '✓' : '…' %></div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px">AXIO VULN LAB</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">훈련 시스템</div>
+        <div style="font-size:13px;font-weight:600">AXIO VULN LAB</div>
+        <div style="font-size:11px;color:var(--text2)">Web Vuln Training Center</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 완료 안 됐을 때 독려 메시지 -->
+  <% if (!isComplete) { %>
+  <div class="card no-print" style="margin-top:20px;text-align:center;padding:20px">
+    <div style="color:var(--text2);font-size:13px;margin-bottom:12px">
+      아직 <%= totalCount - solvedCount %>개의 챌린지가 남아있습니다.<br>
+      모든 챌린지를 완료하면 정식 수료증이 발급됩니다.
+    </div>
+    <a href="/challenges" class="btn btn-primary btn-sm">챌린지 계속하기</a>
+  </div>
+  <% } %>
+</div>
+</body>
+</html>

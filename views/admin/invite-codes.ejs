@@ -77,6 +77,26 @@
     </div>
   </div>
 
+  <!-- 사용 이력 -->
+  <div class="card" style="margin-top:24px">
+    <div class="card-title">최근 코드 사용 이력 (최대 50건)</div>
+    <% if (!uses || uses.length === 0) { %>
+    <p style="color:var(--text2);text-align:center;padding:20px;font-size:13px">사용 이력이 없습니다.</p>
+    <% } else { %>
+    <table>
+      <tr><th>가입자</th><th>사용 코드</th><th>코드 메모</th><th>가입 일시</th></tr>
+      <% uses.forEach(u => { %>
+      <tr>
+        <td><strong><%= u.username %></strong></td>
+        <td><code style="color:var(--accent);font-size:12px"><%= u.code %></code></td>
+        <td style="color:var(--text2);font-size:12px"><%= u.memo || '-' %></td>
+        <td style="color:var(--text2);font-size:12px"><%= u.used_at.slice(0,16) %></td>
+      </tr>
+      <% }) %>
+    </table>
+    <% } %>
+  </div>
+
   <!-- 사용 방법 안내 -->
   <div class="card" style="margin-top:24px">
     <div class="card-title">수강생 안내 방법</div>

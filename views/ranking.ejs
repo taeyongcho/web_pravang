@@ -14,6 +14,30 @@
     .diff-easy   { background:rgba(0,200,150,.15); color:var(--accent); }
     .diff-medium { background:rgba(0,132,255,.15);  color:var(--accent2); }
     .diff-hard   { background:rgba(245,158,11,.15); color:#f59e0b; }
+
+    /* 모바일 카드형 랭킹 */
+    .rank-table-wrap { overflow-x:auto; }
+    .rank-cards { display:none; }
+    .rank-card {
+      background:var(--bg); border:1px solid var(--border); border-radius:10px;
+      padding:14px 16px; margin-bottom:10px;
+      display:grid; grid-template-columns:40px 1fr auto; align-items:center; gap:12px;
+    }
+    .rank-card.me { border-color:rgba(0,200,150,.4); background:rgba(0,200,150,.04); }
+    .rank-card-medal { text-align:center; font-size:22px; }
+    .rank-card-medal .rank-num { font-size:14px; color:var(--text2); font-weight:700; }
+    .rank-card-name { font-weight:700; font-size:14px; }
+    .rank-card-meta { font-size:11px; color:var(--text2); margin-top:3px; }
+    .rank-card-score { text-align:right; }
+    .rank-card-score .val { font-size:20px; font-weight:700; color:var(--accent); }
+    .rank-card-score .lbl { font-size:11px; color:var(--text2); }
+    .rank-card-bar { grid-column:1/-1; }
+    .rank-card-bar-wrap { background:var(--border); border-radius:99px; height:4px; overflow:hidden; }
+    .rank-card-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:99px; }
+    @media (max-width: 640px) {
+      .rank-table-wrap { display:none; }
+      .rank-cards { display:block; }
+    }
   </style>
 </head>
 <body>
@@ -33,6 +57,9 @@
     <% if (ranking.length === 0) { %>
     <p style="text-align:center;color:var(--text2);padding:40px">아직 풀린 챌린지가 없습니다.</p>
     <% } else { %>
+
+    <!-- 데스크톱 테이블 -->
+    <div class="rank-table-wrap">
     <table>
       <tr>
         <th style="width:52px">순위</th>
@@ -76,6 +103,40 @@
       </tr>
       <% }) %>
     </table>
+    </div>
+
+    <!-- 모바일 카드 -->
+    <div class="rank-cards">
+      <% ranking.forEach((r, i) => { %>
+      <div class="rank-card <%= user && user.username === r.username ? 'me' : '' %>">
+        <div class="rank-card-medal">
+          <% if (i === 0) { %>🥇
+          <% } else if (i === 1) { %>🥈
+          <% } else if (i === 2) { %>🥉
+          <% } else { %><span class="rank-num">#<%= i+1 %></span><% } %>
+        </div>
+        <div>
+          <div class="rank-card-name">
+            <%= r.username %>
+            <% if (user && user.username === r.username) { %>
+            <span class="badge" style="font-size:9px;margin-left:4px">나</span>
+            <% } %>
+          </div>
+          <div class="rank-card-meta"><%= r.solved_count %>/<%= total %>문제 · <%= r.last_solved ? r.last_solved.slice(0,10) : '-' %></div>
+        </div>
+        <div class="rank-card-score">
+          <div class="val"><%= r.score.toLocaleString() %></div>
+          <div class="lbl">pt</div>
+        </div>
+        <div class="rank-card-bar">
+          <div class="rank-card-bar-wrap">
+            <div class="rank-card-bar-fill" style="width:<%= Math.round(r.score/maxScore*100) %>%"></div>
+          </div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+
     <% } %>
   </div>
 

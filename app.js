@@ -32,6 +32,11 @@ app.use(session({
   }
 }));
 
+// 가이드/FAQ 페이지
+app.get('/guide', (req, res) => {
+  res.render('guide', { user: req.session.user || null });
+});
+
 // 라우터
 app.use('/', require('./routes/auth'));
 app.use('/dashboard', require('./routes/dashboard'));
