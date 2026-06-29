@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>관리자 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="page-title">관리자 패널 <span class="vuln-tag">A01 - ?role=admin 우회 가능</span></div>
+
+  <div class="grid-2" style="margin-bottom:20px">
+    <a href="/admin/price-fetch" class="btn btn-secondary">📡 SSRF - 시세 가져오기</a>
+    <a href="/admin/download?file=../../package.json" class="btn btn-secondary">📂 Path Traversal 테스트</a>
+  </div>
+
+  <!-- SQL 직접 실행 -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">🔧 SQL 직접 실행 <span class="vuln-tag">A03 - SQL Injection</span></div>
+    <form method="POST" action="/admin/query">
+      <div class="form-group">
+        <label>SQL 쿼리</label>
+        <textarea name="sql" rows="3" placeholder="SELECT * FROM users"><% if (typeof executedSql !== 'undefined') { %><%= executedSql %><% } %></textarea>
+      </div>
+      <button type="submit" class="btn btn-danger btn-sm">실행</button>
+    </form>
+
+    <% if (typeof result !== 'undefined' && result) { %>
+    <div style="margin-top:16px">
+      <% if (result.success) { %>
+        <% if (result.results && result.results.length > 0) { %>
+          <% result.results.forEach(res => { %>
+          <table style="margin-bottom:12px">
+            <tr><% res.columns.forEach(c => { %><th><%= c %></th><% }) %></tr>
+            <% res.values.forEach(row => { %>
+            <tr><% row.forEach(v => { %><td><%= v %></td><% }) %></tr>
+            <% }) %>
+          </table>
+          <% }) %>
+        <% } else { %>
+        <div class="alert alert-success">쿼리 실행 완료 (결과 없음)</div>
+        <% } %>
+      <% } else { %>
+      <div class="alert alert-error">오류: <%= result.error %></div>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- 유저 목록 -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">유저 목록</div>
+    <table>
+      <tr><th>ID</th><th>아이디</th><th>비밀번호</th><th>이메일</th><th>권한</th><th>KRW</th><th>BTC</th><th>삭제</th></tr>
+      <% users.forEach(u => { %>
+      <tr>
+        <td><%= u.id %></td>
+        <td><strong><%= u.username %></strong></td>
+        <td><code style="color:#ff6b7a"><%= u.password %></code></td>
+        <td><%= u.email %></td>
+        <td><span class="badge <%= u.role === 'admin' ? 'admin' : '' %>"><%= u.role %></span></td>
+        <td><%= u.balance_krw ? u.balance_krw.toLocaleString() : 0 %></td>
+        <td><%= u.balance_btc %></td>
+        <td>
+          <form method="POST" action="/admin/user/delete" style="display:inline">
+            <input type="hidden" name="userId" value="<%= u.id %>">
+            <button type="submit" class="btn btn-danger btn-sm">삭제</button>
+          </form>
+        </td>
+      </tr>
+      <% }) %>
+    </table>
+  </div>
+
+  <!-- 최근 거래 -->
+  <div class="card">
+    <div class="card-title">최근 거래내역</div>
+    <table>
+      <tr><th>ID</th><th>FROM</th><th>TO</th><th>코인</th><th>금액</th><th>타입</th><th>날짜</th></tr>
+      <% txs.forEach(tx => { %>
+      <tr>
+        <td><%= tx.id %></td>
+        <td><%= tx.from_user_id || '-' %></td>
+        <td><%= tx.to_user_id || '-' %></td>
+        <td><%= tx.coin %></td>
+        <td><%= tx.amount %></td>
+        <td><%= tx.tx_type %></td>
+        <td style="color:var(--text2)"><%= tx.created_at %></td>
+      </tr>
+      <% }) %>
+    </table>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>계정 정보 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+<div class="container">
+  <div class="page-title">
+    계정 정보 <span class="vuln-tag">A01 - IDOR</span>
+  </div>
+
+  <% if (targetUser.id != user.id) { %>
+  <div class="alert alert-error">
+    ⚠️ 타인의 계정 정보를 조회하고 있습니다! (IDOR 취약점 성공)
+  </div>
+  <% } %>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">계정 정보 (ID: <%= targetUser.id %>)</div>
+    <table>
+      <tr><th>항목</th><th>값</th></tr>
+      <tr><td>아이디</td><td><strong><%= targetUser.username %></strong></td></tr>
+      <tr><td>이메일</td><td><%= targetUser.email %></td></tr>
+      <tr><td>권한</td><td><span class="badge <%= targetUser.role === 'admin' ? 'admin' : '' %>"><%= targetUser.role %></span></td></tr>
+      <tr><td>KRW 잔액</td><td><strong><%= targetUser.balance_krw.toLocaleString() %> ₩</strong></td></tr>
+      <tr><td>BTC 잔액</td><td><%= targetUser.balance_btc %></td></tr>
+      <tr><td>ETH 잔액</td><td><%= targetUser.balance_eth %></td></tr>
+      <tr><td>API Key</td><td><code><%= targetUser.api_key %></code></td></tr>
+      <tr><td>비밀번호</td><td><code><%= targetUser.password %></code> <span class="vuln-tag">A02 - 평문/약한해시</span></td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">거래 내역</div>
+    <% if (txs.length === 0) { %>
+    <p style="color:var(--text2);text-align:center;padding:20px">거래 내역이 없습니다.</p>
+    <% } else { %>
+    <table>
+      <tr><th>타입</th><th>코인</th><th>금액</th><th>메모</th><th>날짜</th></tr>
+      <% txs.forEach(tx => { %>
+      <tr>
+        <td><%= tx.tx_type %></td>
+        <td><%= tx.coin %></td>
+        <td><%= tx.amount %></td>
+        <td><%= tx.memo || '-' %></td>
+        <td style="color:var(--text2)"><%= tx.created_at %></td>
+      </tr>
+      <% }) %>
+    </table>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

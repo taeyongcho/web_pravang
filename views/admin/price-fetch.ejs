@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>시세 가져오기 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="page-title">외부 시세 가져오기 <span class="vuln-tag">A10 - SSRF</span></div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">URL에서 시세 데이터 가져오기</div>
+      <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+      <% } %>
+
+      <form method="POST" action="/admin/price-fetch">
+        <div class="form-group">
+          <label>시세 API URL (검증 없음)</label>
+          <input type="text" name="url" value="<% if (typeof fetchedUrl !== 'undefined') { %><%= fetchedUrl %><% } %>" placeholder="http://api.example.com/prices">
+        </div>
+        <button type="submit" class="btn btn-primary">가져오기</button>
+      </form>
+
+      <% if (result) { %>
+      <div style="margin-top:16px">
+        <div class="card-title">응답 결과</div>
+        <pre class="code-block"><%= result %></pre>
+      </div>
+      <% } %>
+    </div>
+
+    <div class="card">
+      <div class="card-title">SSRF 테스트 페이로드</div>
+      <div style="font-size:13px;color:var(--text2);line-height:2">
+        내부 서버 접근:<br>
+        <code>http://localhost:3000</code><br>
+        <code>http://127.0.0.1:3000/api/users</code><br>
+        <code>http://127.0.0.1:3000/admin</code><br><br>
+        클라우드 메타데이터:<br>
+        <code>http://169.254.169.254/latest/meta-data/</code><br>
+        <code>http://metadata.google.internal/</code><br><br>
+        파일 프로토콜:<br>
+        <code>file:///etc/passwd</code>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<div class="warn-banner">
+  ⚠️ 이 사이트는 웹 취약점 진단 훈련용입니다. 실제 거래소가 아닙니다.
+</div>
+<nav>
+  <div class="nav-logo">PRAVANG <span>VULN LAB</span></div>
+  <div class="nav-links">
+    <a href="/">홈</a>
+    <% if (user) { %>
+    <a href="/dashboard">대시보드</a>
+    <a href="/dashboard/transfer">송금</a>
+    <% } %>
+    <a href="/notice">공지사항</a>
+    <a href="/challenges">챌린지</a>
+    <% if (user && user.role === 'admin') { %>
+    <a href="/admin" style="color:#ff6b7a">관리자</a>
+    <% } %>
+  </div>
+  <div class="nav-right">
+    <% if (user) { %>
+      <span class="badge <%= user.role === 'admin' ? 'admin' : '' %>"><%= user.username %></span>
+      <a href="/logout" class="btn btn-secondary btn-sm">로그아웃</a>
+    <% } else { %>
+      <a href="/login" class="btn btn-secondary btn-sm">로그인</a>
+      <a href="/register" class="btn btn-primary btn-sm">회원가입</a>
+    <% } %>
+  </div>
+</nav>

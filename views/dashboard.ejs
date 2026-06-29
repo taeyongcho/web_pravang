@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>대시보드 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+
+<div class="container">
+  <div class="page-title">대시보드</div>
+
+  <% if (typeof voucherError !== 'undefined' && voucherError) { %>
+  <div class="alert alert-error"><%= voucherError %></div>
+  <% } %>
+
+  <!-- 잔액 카드 -->
+  <div class="grid-3" style="margin-bottom:20px">
+    <div class="card">
+      <div class="card-title">KRW 잔액</div>
+      <div class="balance-val"><%= user.balance_krw.toLocaleString() %> ₩</div>
+      <div class="balance-sub">원화</div>
+    </div>
+    <div class="card">
+      <div class="card-title">BTC 잔액</div>
+      <div class="balance-val"><%= user.balance_btc.toFixed(8) %></div>
+      <div class="balance-sub">≈ ₩<%= (user.balance_btc * prices.BTC).toLocaleString() %></div>
+    </div>
+    <div class="card">
+      <div class="card-title">ETH 잔액</div>
+      <div class="balance-val"><%= user.balance_eth.toFixed(4) %></div>
+      <div class="balance-sub">≈ ₩<%= (user.balance_eth * prices.ETH).toLocaleString() %></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- 시세 -->
+    <div class="card">
+      <div class="card-title">📈 실시간 시세</div>
+      <div class="ticker">
+        <div class="ticker-name">BTC</div>
+        <div class="ticker-price">₩<%= prices.BTC.toLocaleString() %></div>
+        <div class="ticker-change up">+2.34%</div>
+      </div>
+      <div class="ticker">
+        <div class="ticker-name">ETH</div>
+        <div class="ticker-price">₩<%= prices.ETH.toLocaleString() %></div>
+        <div class="ticker-change up">+1.12%</div>
+      </div>
+      <div class="ticker">
+        <div class="ticker-name">XRP</div>
+        <div class="ticker-price">₩<%= prices.XRP.toLocaleString() %></div>
+        <div class="ticker-change down">-0.87%</div>
+      </div>
+    </div>
+
+    <!-- 바우처 -->
+    <div class="card">
+      <div class="card-title">🎫 바우처 사용 <span class="vuln-tag">Race Condition</span></div>
+      <form method="POST" action="/dashboard/voucher">
+        <div class="form-group">
+          <label>바우처 코드</label>
+          <input type="text" name="code" placeholder="바우처 코드 입력">
+        </div>
+        <button type="submit" class="btn btn-primary">사용하기</button>
+      </form>
+      <div style="margin-top:12px;font-size:12px;color:var(--text2)">
+        힌트: 코드를 한번 사용해도 동시 요청으로 재사용이 가능합니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- 계정 정보 + IDOR -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">내 계정 정보 <span class="vuln-tag">IDOR</span></div>
+    <div style="display:flex;gap:24px;align-items:center">
+      <div>
+        <div style="color:var(--text2);font-size:12px">유저 ID</div>
+        <div style="font-size:18px;font-weight:600">#<%= user.id %></div>
+      </div>
+      <div>
+        <div style="color:var(--text2);font-size:12px">아이디</div>
+        <div><%= user.username %></div>
+      </div>
+      <div>
+        <div style="color:var(--text2);font-size:12px">이메일</div>
+        <div><%= user.email || '-' %></div>
+      </div>
+      <div>
+        <div style="color:var(--text2);font-size:12px">API Key</div>
+        <code><%= user.api_key %></code>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:12px;color:var(--text2)">
+      다른 유저 정보 조회:
+      <a href="/dashboard/account/1">/dashboard/account/1</a>
+      <a href="/dashboard/account/2" style="margin-left:8px">/account/2</a>
+      <a href="/dashboard/account/3" style="margin-left:8px">/account/3</a>
+    </div>
+  </div>
+
+  <!-- 최근 거래내역 -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">최근 거래내역</div>
+    <% if (txs.length === 0) { %>
+    <p style="color:var(--text2);text-align:center;padding:20px">거래 내역이 없습니다.</p>
+    <% } else { %>
+    <table>
+      <tr><th>타입</th><th>코인</th><th>금액</th><th>메모</th><th>날짜</th></tr>
+      <% txs.forEach(tx => { %>
+      <tr>
+        <td><%= tx.tx_type %></td>
+        <td><%= tx.coin %></td>
+        <td><%= tx.amount %></td>
+        <td><%= tx.memo || '-' %></td>
+        <td style="color:var(--text2)"><%= tx.created_at %></td>
+      </tr>
+      <% }) %>
+    </table>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

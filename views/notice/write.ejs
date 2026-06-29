@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>글쓰기 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="page-title">공지사항 작성 <span class="vuln-tag">A01 - 관리자 체크 없음</span></div>
+  <div class="card" style="max-width:700px">
+    <form method="POST" action="/notice/write">
+      <div class="form-group">
+        <label>제목</label>
+        <input type="text" name="title" placeholder="제목 입력">
+      </div>
+      <div class="form-group">
+        <label>내용 (HTML 허용)</label>
+        <textarea name="content" rows="8" placeholder="<script>alert('XSS')</script> 등 HTML 태그 입력 가능"></textarea>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button type="submit" class="btn btn-primary">등록</button>
+        <a href="/notice" class="btn btn-secondary">취소</a>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

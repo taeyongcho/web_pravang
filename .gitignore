@@ -1,0 +1,5 @@
+node_modules/
+database/pravang.db
+public/uploads/*
+!public/uploads/.gitkeep
+*.log

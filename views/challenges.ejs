@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>챌린지 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+<div class="container">
+  <div class="page-title">취약점 챌린지 목록</div>
+
+  <div class="alert alert-warning">
+    ⚠️ 이 챌린지들은 교육 목적으로만 사용하세요. 실제 서비스에 적용 시 법적 처벌을 받을 수 있습니다.
+  </div>
+
+  <% const categories = [...new Set(challenges.map(c => c.category))] %>
+  <% categories.forEach(cat => { %>
+  <div style="margin-bottom:24px">
+    <h3 style="font-size:14px;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)"><%= cat %></h3>
+    <% challenges.filter(c => c.category === cat).forEach(ch => { %>
+    <div class="challenge-card">
+      <div class="challenge-header">
+        <span class="difficulty <%= ch.difficulty %>"><%= ch.difficulty.toUpperCase() %></span>
+        <strong><%= ch.title %></strong>
+        <span style="color:var(--text2);font-size:12px">(<%= ch.id %>)</span>
+      </div>
+      <p style="color:var(--text2);font-size:13px;margin-bottom:10px"><%= ch.description %></p>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">
+        대상: <code><%= ch.target %></code>
+      </div>
+      <details>
+        <summary style="cursor:pointer;font-size:12px;color:var(--accent2);user-select:none">힌트 보기</summary>
+        <ul class="hint-list" style="margin-top:8px">
+          <% ch.hints.forEach(h => { %>
+          <li class="hint-item"><%= h %></li>
+          <% }) %>
+        </ul>
+        <div style="margin-top:8px;font-size:12px">
+          <details>
+            <summary style="cursor:pointer;color:var(--red);user-select:none">FLAG 보기</summary>
+            <code style="margin-top:6px;display:block;color:var(--accent)"><%= ch.flag %></code>
+          </details>
+        </div>
+      </details>
+    </div>
+    <% }) %>
+  </div>
+  <% }) %>
+</div>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title><%= notice.title %> - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div style="margin-bottom:16px"><a href="/notice" style="color:var(--text2)">← 공지사항 목록</a></div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <h2 style="font-size:18px"><%= notice.title %></h2>
+      <span class="vuln-tag">A03 - XSS</span>
+    </div>
+    <div style="color:var(--text2);font-size:12px;margin-bottom:16px">
+      작성자: <strong><%= notice.author %></strong> | 조회수: <%= notice.views %> | <%= notice.created_at %>
+    </div>
+    <hr class="divider">
+    <!-- XSS 취약: <%- %> 로 HTML 미이스케이프 렌더링 -->
+    <div style="line-height:1.8"><%- notice.content %></div>
+  </div>
+
+  <!-- 댓글 -->
+  <div class="card">
+    <div class="card-title">댓글 <span class="vuln-tag">Stored XSS</span></div>
+
+    <% if (comments.length === 0) { %>
+    <p style="color:var(--text2);padding:12px 0">댓글이 없습니다.</p>
+    <% } else { %>
+    <% comments.forEach(c => { %>
+    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <strong style="font-size:13px"><%= c.author %></strong>
+        <span style="color:var(--text2);font-size:11px"><%= c.created_at %></span>
+      </div>
+      <!-- XSS 취약: 댓글 내용 그대로 렌더링 -->
+      <div style="font-size:13px"><%- c.content %></div>
+    </div>
+    <% }) %>
+    <% } %>
+
+    <% if (user) { %>
+    <div style="margin-top:16px">
+      <form method="POST" action="/notice/<%= notice.id %>/comment">
+        <div class="form-group">
+          <label>댓글 작성 (XSS 페이로드 입력 가능)</label>
+          <textarea name="content" placeholder="&lt;script&gt;alert('XSS')&lt;/script&gt; 을 입력해보세요"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">댓글 등록</button>
+      </form>
+    </div>
+    <% } else { %>
+    <div style="margin-top:12px;color:var(--text2);font-size:13px">
+      댓글을 작성하려면 <a href="/login">로그인</a>하세요.
+    </div>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

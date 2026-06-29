@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>오류 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+<div class="container" style="max-width:700px;margin-top:60px">
+  <div class="card">
+    <h2 style="color:var(--red);margin-bottom:16px">⚠️ 오류 발생</h2>
+    <p style="color:var(--text2);margin-bottom:16px"><%= message %></p>
+
+    <% if (typeof stack !== 'undefined' && stack) { %>
+    <!-- A05: 스택 트레이스 노출 취약점 -->
+    <div style="margin-top:16px">
+      <div class="card-title">스택 트레이스 (A05 - 정보 노출) <span class="vuln-tag">취약</span></div>
+      <pre class="code-block"><%= stack %></pre>
+    </div>
+    <% } %>
+
+    <a href="/" class="btn btn-secondary" style="margin-top:16px">홈으로</a>
+  </div>
+</div>
+</body>
+</html>
