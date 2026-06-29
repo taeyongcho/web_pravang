@@ -11,9 +11,11 @@
 <div class="container">
   <div class="page-title">관리자 패널 <span class="vuln-tag">A01 - ?role=admin 우회 가능</span></div>
 
-  <div class="grid-2" style="margin-bottom:20px">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:20px">
     <a href="/admin/price-fetch" class="btn btn-secondary">📡 SSRF - 시세 가져오기</a>
     <a href="/admin/download?file=../../package.json" class="btn btn-secondary">📂 Path Traversal 테스트</a>
+    <a href="/admin/shell-view" class="btn btn-danger">💀 웹셸 실행 (RCE)</a>
+    <a href="/admin/invite-codes" class="btn btn-primary">🎫 초대 코드 관리</a>
   </div>
 
   <!-- SQL 직접 실행 -->

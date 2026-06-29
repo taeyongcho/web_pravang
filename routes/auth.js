@@ -80,20 +80,36 @@ function getAttemptCount(ip) {
 
 // 회원가입 페이지
 router.get('/register', (req, res) => {
-  res.render('register', { error: null, user: null });
+  res.render('register', { error: null, success: null, user: null });
 });
 
-// A02: 비밀번호 평문 저장 (취약점)
+// A02: 비밀번호 평문 저장 + 초대 코드 검증
 router.post('/register', (req, res) => {
-  const { username, password, email } = req.body;
+  const { username, password, email, invite_code } = req.body;
+
+  // 초대 코드 검증
+  if (!invite_code) {
+    return res.render('register', { error: '초대 코드가 필요합니다.', success: null, user: null });
+  }
+  const code = get('SELECT * FROM invite_codes WHERE code = ?', [invite_code]);
+  if (!code) {
+    return res.render('register', { error: '유효하지 않은 초대 코드입니다.', success: null, user: null });
+  }
+  if (code.used_count >= code.max_uses) {
+    return res.render('register', { error: '이미 사용 횟수가 초과된 코드입니다.', success: null, user: null });
+  }
+  if (code.expires_at && new Date(code.expires_at) < new Date()) {
+    return res.render('register', { error: '만료된 초대 코드입니다.', success: null, user: null });
+  }
 
   const existing = get('SELECT id FROM users WHERE username = ?', [username]);
   if (existing) {
-    return res.render('register', { error: '이미 사용 중인 아이디입니다.', user: null });
+    return res.render('register', { error: '이미 사용 중인 아이디입니다.', success: null, user: null });
   }
 
   // 비밀번호를 평문으로 저장 (취약점)
   run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', [username, password, email]);
+  run('UPDATE invite_codes SET used_count = used_count + 1 WHERE id = ?', [code.id]);
   saveDb();
 
   res.redirect('/login');

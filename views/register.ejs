@@ -5,18 +5,49 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>회원가입 - AXIO</title>
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .invite-field { position: relative; }
+    .invite-field input { padding-right: 36px; }
+    .invite-icon {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 16px; pointer-events: none;
+    }
+    .code-hint {
+      font-size: 11px; color: var(--text2); margin-top: 4px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px 10px; line-height: 1.6;
+    }
+  </style>
 </head>
 <body>
 <div class="auth-wrap">
   <div class="auth-card">
     <div class="auth-logo">AXIO</div>
-    <div class="auth-sub">새 계정을 만들어보세요</div>
+    <div class="auth-sub">웹 취약점 모의훈련 센터</div>
 
     <% if (error) { %>
     <div class="alert alert-error"><%= error %></div>
     <% } %>
+    <% if (success) { %>
+    <div class="alert alert-success"><%= success %></div>
+    <% } %>
 
     <form method="POST" action="/register">
+      <!-- 초대 코드 필드 (최상단 배치) -->
+      <div class="form-group">
+        <label>🎫 초대 코드 <span style="color:var(--red)">*</span></label>
+        <div class="invite-field">
+          <input type="text" name="invite_code" placeholder="AXIO-XXXX-XXXX" autocomplete="off" style="font-family:monospace;letter-spacing:1px">
+          <span class="invite-icon">🔑</span>
+        </div>
+        <div class="code-hint">
+          훈련 주관자에게 초대 코드를 받아 입력하세요.<br>
+          <strong>데모 코드:</strong> <code>AXIO-TRAIN-2024</code>
+        </div>
+      </div>
+
+      <div class="divider" style="margin:16px 0"></div>
+
       <div class="form-group">
         <label>아이디</label>
         <input type="text" name="username" placeholder="아이디">
@@ -27,9 +58,9 @@
       </div>
       <div class="form-group">
         <label>이메일</label>
-        <input type="email" name="email" placeholder="이메일">
+        <input type="email" name="email" placeholder="이메일 (선택)">
       </div>
-      <button type="submit" class="btn btn-primary btn-block">회원가입</button>
+      <button type="submit" class="btn btn-primary btn-block">훈련 시작하기</button>
     </form>
 
     <div class="divider"></div>

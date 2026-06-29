@@ -124,7 +124,7 @@ const challenges = [
       'JWT 토큰이 필요합니다. /api/token에서 발급받으세요.',
       '.js 또는 .ejs 파일을 업로드해보세요.'
     ],
-    flag: 'AXIO{file_upload_webshell}'
+    flag: 'AXIO{webshell_rce_server_pwned}'
   },
   {
     id: 'A09-1',

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>초대 코드 관리 - AXIO Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .code-text { font-family: monospace; font-size: 14px; font-weight: 700; color: var(--accent); letter-spacing: 1px; }
+    .progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 4px; }
+    .progress-fill { height: 100%; border-radius: 2px; background: var(--accent); }
+    .progress-fill.full { background: var(--red); }
+  </style>
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="page-title">초대 코드 관리</div>
+
+  <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+  <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+  <div class="grid-2" style="align-items:start">
+    <!-- 코드 생성 폼 -->
+    <div class="card">
+      <div class="card-title">새 초대 코드 발급</div>
+      <form method="POST" action="/admin/invite-codes/create">
+        <div class="form-group">
+          <label>코드 직접 지정 (비워두면 자동 생성)</label>
+          <input type="text" name="custom_code" placeholder="예: TEAM-ALPHA-2024" style="font-family:monospace">
+        </div>
+        <div class="form-group">
+          <label>메모 / 용도</label>
+          <input type="text" name="memo" placeholder="예: 6월 A반 수강생 10명">
+        </div>
+        <div class="form-group">
+          <label>최대 사용 횟수</label>
+          <input type="number" name="max_uses" value="1" min="1" max="9999">
+          <div style="font-size:11px;color:var(--text2);margin-top:4px">9999 = 사실상 무제한</div>
+        </div>
+        <div class="form-group">
+          <label>만료일 (비워두면 무기한)</label>
+          <input type="date" name="expires_at">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">코드 발급</button>
+      </form>
+    </div>
+
+    <!-- 발급된 코드 목록 -->
+    <div class="card">
+      <div class="card-title">발급된 초대 코드 (<%= codes.length %>)</div>
+      <% if (codes.length === 0) { %>
+      <p style="color:var(--text2);text-align:center;padding:20px">발급된 코드가 없습니다.</p>
+      <% } else { %>
+      <% codes.forEach(c => { %>
+      <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span class="code-text"><%= c.code %></span>
+          <form method="POST" action="/admin/invite-codes/delete" style="display:inline">
+            <input type="hidden" name="id" value="<%= c.id %>">
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('삭제?')">삭제</button>
+          </form>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:6px">
+          <% if (c.memo) { %><span>📝 <%= c.memo %></span> · <% } %>
+          사용: <strong style="color:<%= c.used_count >= c.max_uses ? 'var(--red)' : 'var(--accent)' %>"><%= c.used_count %></strong>/<%= c.max_uses %>
+          <% if (c.expires_at) { %> · 만료: <%= c.expires_at.slice(0,10) %><% } %>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill <%= c.used_count >= c.max_uses ? 'full' : '' %>"
+               style="width:<%= Math.min(100, Math.round(c.used_count / c.max_uses * 100)) %>%"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px">발급일: <%= c.created_at.slice(0,10) %></div>
+      </div>
+      <% }) %>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- 사용 방법 안내 -->
+  <div class="card" style="margin-top:24px">
+    <div class="card-title">수강생 안내 방법</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px">
+      <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border)">
+        <div style="font-weight:700;margin-bottom:6px">① 코드 발급</div>
+        <p style="font-size:12px;color:var(--text2)">이 페이지에서 세션별 초대 코드 생성</p>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border)">
+        <div style="font-weight:700;margin-bottom:6px">② 코드 배포</div>
+        <p style="font-size:12px;color:var(--text2)">카카오톡, 이메일, 화이트보드 등으로 공유</p>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border)">
+        <div style="font-weight:700;margin-bottom:6px">③ 수강생 가입</div>
+        <p style="font-size:12px;color:var(--text2)">/register 에서 초대 코드 입력 후 회원가입</p>
+      </div>
+      <div style="background:var(--bg);border-radius:08px;padding:12px;border:1px solid var(--border)">
+        <div style="font-weight:700;margin-bottom:6px">④ 훈련 시작</div>
+        <p style="font-size:12px;color:var(--text2)">로그인 후 챌린지 페이지에서 훈련 시작</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

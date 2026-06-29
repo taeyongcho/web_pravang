@@ -144,6 +144,22 @@ CREATE TABLE IF NOT EXISTS price_history (
   recorded_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS invite_codes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  code TEXT NOT NULL UNIQUE,
+  memo TEXT,
+  max_uses INTEGER DEFAULT 1,
+  used_count INTEGER DEFAULT 0,
+  expires_at TEXT,
+  created_by TEXT DEFAULT 'admin',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO invite_codes (code, memo, max_uses) VALUES
+  ('AXIO-TRAIN-2024', '기본 훈련 코드 (무제한)', 9999),
+  ('VIP-ONLY-001', 'VIP 수강생 전용 (1회용)', 1),
+  ('GROUP-SESSION-A', '그룹 A 세션 (10명)', 10);
+
 CREATE TABLE IF NOT EXISTS shop_products (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
