@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>지갑 관리 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="page-title">지갑 주소 관리 <span class="vuln-tag">A01 - IDOR</span></div>
+
+  <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+  <% if (error)   { %><div class="alert alert-error"><%= error %></div><% } %>
+
+  <div class="grid-2" style="align-items:start">
+    <!-- 주소 추가 -->
+    <div class="card">
+      <div class="card-title">출금 주소 등록</div>
+      <form method="POST" action="/wallet/add">
+        <div class="form-group">
+          <label>코인</label>
+          <select name="coin">
+            <option value="BTC">BTC</option>
+            <option value="ETH">ETH</option>
+            <option value="XRP">XRP</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>지갑 주소 <span class="vuln-tag">형식 검증 없음</span></label>
+          <input type="text" name="address" placeholder="1A2B3C4D... 또는 0xABCD...">
+        </div>
+        <div class="form-group">
+          <label>별칭 (라벨)</label>
+          <input type="text" name="label" placeholder="내 BTC 지갑">
+        </div>
+        <button type="submit" class="btn btn-primary">등록</button>
+      </form>
+    </div>
+
+    <!-- 전체 지갑 목록 (IDOR: 타인 것도 노출) -->
+    <div class="card">
+      <div class="card-title">
+        전체 지갑 목록
+        <span class="vuln-tag">모든 유저 지갑 노출</span>
+      </div>
+      <div class="alert alert-error" style="font-size:12px;margin-bottom:12px">
+        ⚠️ 본인 지갑만 보여야 하지만, 전체 유저의 지갑이 노출됩니다.<br>
+        또한 다른 유저의 지갑을 삭제할 수 있습니다. (IDOR)
+      </div>
+      <% if (wallets.length === 0) { %>
+      <p style="color:var(--text2);text-align:center;padding:20px">등록된 지갑이 없습니다.</p>
+      <% } else { %>
+      <table>
+        <tr><th>소유자</th><th>코인</th><th>주소</th><th>라벨</th><th></th></tr>
+        <% wallets.forEach(w => { %>
+        <tr>
+          <td>
+            <span style="<%= w.user_id == user.id ? 'color:var(--accent);font-weight:600' : 'color:var(--text2)' %>">
+              <%= w.username %>
+              <% if (w.user_id == user.id) { %><span class="badge" style="font-size:10px">나</span><% } %>
+            </span>
+          </td>
+          <td><strong><%= w.coin %></strong></td>
+          <td><code style="font-size:11px"><%= w.address %></code></td>
+          <td><%= w.label || '-' %></td>
+          <td>
+            <form method="POST" action="/wallet/delete/<%= w.id %>" style="display:inline">
+              <button type="submit" class="btn btn-danger btn-sm"
+                onclick="return confirm('<% if (w.user_id != user.id) { %>타인의 지갑입니다! IDOR 취약점 테스트입니다. 삭제할까요?<% } else { %>삭제하시겠습니까?<% } %>')">
+                삭제
+              </button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </table>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

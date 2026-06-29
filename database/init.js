@@ -111,6 +111,51 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   ip TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS orders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  coin TEXT NOT NULL,
+  order_type TEXT NOT NULL,
+  side TEXT NOT NULL,
+  price REAL NOT NULL,
+  amount REAL NOT NULL,
+  filled REAL DEFAULT 0,
+  status TEXT DEFAULT 'open',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS order_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  order_id INTEGER,
+  buyer_id INTEGER,
+  seller_id INTEGER,
+  coin TEXT NOT NULL,
+  price REAL NOT NULL,
+  amount REAL NOT NULL,
+  total REAL NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS price_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  coin TEXT NOT NULL,
+  price REAL NOT NULL,
+  recorded_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO price_history (coin, price, recorded_at) VALUES
+  ('BTC', 84000000, datetime('now', '-60 minutes')),
+  ('BTC', 84200000, datetime('now', '-50 minutes')),
+  ('BTC', 83800000, datetime('now', '-40 minutes')),
+  ('BTC', 85100000, datetime('now', '-30 minutes')),
+  ('BTC', 84700000, datetime('now', '-20 minutes')),
+  ('BTC', 85500000, datetime('now', '-10 minutes')),
+  ('BTC', 85200000, datetime('now')),
+  ('ETH', 4150000, datetime('now', '-60 minutes')),
+  ('ETH', 4200000, datetime('now', '-40 minutes')),
+  ('ETH', 4180000, datetime('now', '-20 minutes')),
+  ('ETH', 4220000, datetime('now'));
 `;
 
 module.exports = { initSql };

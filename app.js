@@ -40,6 +40,9 @@ app.use('/admin', require('./routes/admin'));
 app.use('/api', require('./routes/api'));
 app.use('/challenges', require('./routes/challenges'));
 app.use('/system', require('./routes/system'));
+app.use('/trade', require('./routes/trade').router);
+app.use('/wallet', require('./routes/wallet'));
+app.use('/mypage', require('./routes/mypage'));
 
 // 메인 페이지
 app.get('/', (req, res) => {

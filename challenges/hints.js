@@ -170,6 +170,35 @@ const challenges = [
     flag: 'PRAVANG{A06_outdated_jwt_cve_2022_23529}'
   },
   {
+    id: 'A04-2',
+    category: 'A04 - Insecure Design',
+    title: 'Mass Assignment으로 관리자 권한 획득',
+    description: '마이페이지 프로필 수정 시 role 파라미터를 조작해 관리자로 권한 상승하세요.',
+    target: '/mypage',
+    difficulty: 'medium',
+    hints: [
+      '프로필 수정 폼을 Burp Suite로 가로채보세요.',
+      'role=user 파라미터가 있습니다.',
+      'role=admin 으로 변경 후 전송해보세요.',
+      '변경 후 /admin 페이지에 접근해보세요.'
+    ],
+    flag: 'PRAVANG{mass_assignment_role_escalation}'
+  },
+  {
+    id: 'A02-2',
+    category: 'A02 - Cryptographic Failures',
+    title: '현재 비밀번호 확인 없는 비밀번호 변경',
+    description: '마이페이지에서 현재 비밀번호 없이 계정 비밀번호를 변경해보세요.',
+    target: '/mypage',
+    difficulty: 'easy',
+    hints: [
+      '비밀번호 변경 폼에 현재 비밀번호 필드가 없습니다.',
+      '세션 쿠키만 있으면 비밀번호 변경이 가능합니다.',
+      'XSS로 탈취한 세션으로도 비밀번호 변경이 가능합니다.'
+    ],
+    flag: 'PRAVANG{no_current_password_verification}'
+  },
+  {
     id: 'A07-2',
     category: 'A07 - Identification & Authentication Failures',
     title: '로그인 브루트포스 공격',

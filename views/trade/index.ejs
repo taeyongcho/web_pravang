@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title><%= coin %>/KRW - PRAVANG Exchange</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .trade-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      grid-template-rows: auto auto;
+      gap: 12px;
+    }
+    .chart-area { grid-column: 1; grid-row: 1; }
+    .order-area { grid-column: 2; grid-row: 1 / 3; }
+    .book-area  { grid-column: 1; grid-row: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .coin-tab { display:flex; gap:4px; margin-bottom:12px; }
+    .coin-tab a {
+      padding:6px 16px; border-radius:6px; font-size:13px; font-weight:600;
+      background:var(--card); border:1px solid var(--border); color:var(--text2);
+    }
+    .coin-tab a.active { background:var(--accent); color:#000; border-color:var(--accent); }
+
+    .price-header { display:flex; align-items:baseline; gap:12px; margin-bottom:12px; }
+    .cur-price { font-size:28px; font-weight:700; color:var(--accent); }
+    .cur-change { font-size:13px; }
+
+    .order-tab { display:flex; margin-bottom:12px; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+    .order-tab button {
+      flex:1; padding:10px; border:none; cursor:pointer; font-size:13px; font-weight:600;
+      background:var(--bg); color:var(--text2); transition: all .15s;
+    }
+    .order-tab button.buy.active  { background:#00c896; color:#000; }
+    .order-tab button.sell.active { background:#ff4757; color:#fff; }
+
+    .book-row { display:flex; justify-content:space-between; padding:4px 8px; border-radius:4px; font-size:12px; cursor:pointer; }
+    .book-row:hover { opacity:.8; }
+    .book-row.sell { background:rgba(255,71,87,.06); }
+    .book-row.buy  { background:rgba(0,200,150,.06); }
+    .book-row .bar {
+      position:absolute; right:0; top:0; bottom:0; border-radius:4px; opacity:.15;
+    }
+
+    .trade-row { display:flex; justify-content:space-between; padding:3px 0; font-size:12px; border-bottom:1px solid rgba(42,58,85,.3); }
+
+    #orderForm input, #orderForm select { margin-bottom:10px; }
+    .total-display { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px; font-size:13px; color:var(--text2); margin-bottom:12px; }
+    .total-display span { color:var(--text); font-weight:600; }
+  </style>
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container" style="max-width:1400px">
+
+  <!-- 코인 탭 -->
+  <div class="coin-tab">
+    <a href="/trade?coin=BTC" class="<%= coin==='BTC'?'active':'' %>">BTC/KRW</a>
+    <a href="/trade?coin=ETH" class="<%= coin==='ETH'?'active':'' %>">ETH/KRW</a>
+    <a href="/trade?coin=XRP" class="<%= coin==='XRP'?'active':'' %>">XRP/KRW</a>
+  </div>
+
+  <!-- 현재가 헤더 -->
+  <div class="price-header">
+    <div class="cur-price" id="curPrice">₩<%= price.toLocaleString() %></div>
+    <div class="cur-change up" id="curChange">+0.00%</div>
+    <div style="color:var(--text2);font-size:12px;margin-left:auto">
+      <% if (user) { %>
+      KRW: <strong>₩<%= user.balance_krw.toLocaleString() %></strong> &nbsp;
+      <%= coin %>: <strong><%= (user['balance_' + coin.toLowerCase()] || 0).toFixed(coin==='XRP'?2:8) %></strong>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="trade-layout">
+    <!-- 차트 -->
+    <div class="card chart-area">
+      <div class="card-title"><%= coin %>/KRW 가격 차트 (실시간)</div>
+      <canvas id="priceChart" height="200"></canvas>
+    </div>
+
+    <!-- 주문창 -->
+    <div class="card order-area">
+      <% if (!user) { %>
+      <div style="text-align:center;padding:32px;color:var(--text2)">
+        <p>주문하려면 로그인하세요.</p>
+        <a href="/login" class="btn btn-primary" style="margin-top:12px">로그인</a>
+      </div>
+      <% } else { %>
+      <div class="order-tab">
+        <button class="buy active" onclick="setTab('buy', this)">매수</button>
+        <button class="sell" onclick="setTab('sell', this)">매도</button>
+      </div>
+
+      <form id="orderForm" onsubmit="submitOrder(event)">
+        <input type="hidden" name="coin" value="<%= coin %>">
+        <input type="hidden" name="side" id="sideInput" value="buy">
+
+        <div class="form-group" style="margin-bottom:10px">
+          <label>주문 유형 <span class="vuln-tag">A04 - 가격 조작</span></label>
+          <select name="order_type" id="orderType" onchange="togglePrice()">
+            <option value="limit">지정가</option>
+            <option value="market">시장가</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="priceGroup" style="margin-bottom:10px">
+          <label>주문가격 (KRW)</label>
+          <input type="number" name="price" id="priceInput" value="<%= price %>" step="1000">
+        </div>
+
+        <div class="form-group" style="margin-bottom:10px">
+          <label>주문수량 (<%= coin %>)</label>
+          <input type="number" name="amount" id="amountInput" value="0.001" step="0.0001" min="0.0001">
+        </div>
+
+        <div class="total-display">
+          주문금액: <span id="totalDisplay">₩0</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submitBtn" style="background:var(--accent);color:#000">
+          매수
+        </button>
+        <div id="orderMsg" style="margin-top:8px;font-size:13px"></div>
+      </form>
+      <% } %>
+    </div>
+
+    <!-- 호가창 + 체결내역 -->
+    <div class="book-area">
+      <!-- 매도 호가 -->
+      <div class="card">
+        <div class="card-title">매도 호가 <span style="color:var(--text2)">(ASK)</span></div>
+        <% if (sellOrders.length === 0) { %>
+        <p style="color:var(--text2);font-size:12px;padding:8px">없음</p>
+        <% } else { %>
+        <% sellOrders.slice().reverse().forEach(o => { %>
+        <div class="book-row sell" onclick="setPrice(<%= o.price %>)">
+          <span style="color:var(--red)">₩<%= o.price.toLocaleString() %></span>
+          <span style="color:var(--text2)"><%= (o.amount - o.filled).toFixed(4) %></span>
+          <span style="color:var(--text2);font-size:11px"><%= o.username %></span>
+        </div>
+        <% }) %>
+        <% } %>
+
+        <div style="text-align:center;padding:8px;font-size:14px;font-weight:700;color:var(--accent)" id="bookPrice">
+          ₩<%= price.toLocaleString() %>
+        </div>
+
+        <!-- 매수 호가 -->
+        <div class="card-title" style="margin-top:8px">매수 호가 <span style="color:var(--text2)">(BID)</span></div>
+        <% if (buyOrders.length === 0) { %>
+        <p style="color:var(--text2);font-size:12px;padding:8px">없음</p>
+        <% } else { %>
+        <% buyOrders.forEach(o => { %>
+        <div class="book-row buy" onclick="setPrice(<%= o.price %>)">
+          <span style="color:var(--accent)">₩<%= o.price.toLocaleString() %></span>
+          <span style="color:var(--text2)"><%= (o.amount - o.filled).toFixed(4) %></span>
+          <span style="color:var(--text2);font-size:11px"><%= o.username %></span>
+        </div>
+        <% }) %>
+        <% } %>
+      </div>
+
+      <!-- 최근 체결 -->
+      <div class="card">
+        <div class="card-title">최근 체결</div>
+        <div id="tradeList">
+        <% recentTrades.forEach(t => { %>
+        <div class="trade-row">
+          <span style="color:var(--accent)">₩<%= t.price.toLocaleString() %></span>
+          <span style="color:var(--text2)"><%= parseFloat(t.amount).toFixed(4) %></span>
+          <span style="color:var(--text2);font-size:11px"><%= t.created_at.slice(11,16) %></span>
+        </div>
+        <% }) %>
+        </div>
+
+        <!-- 내 주문 -->
+        <% if (user && myOrders.length > 0) { %>
+        <div class="card-title" style="margin-top:16px">내 주문</div>
+        <% myOrders.forEach(o => { %>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;border-bottom:1px solid rgba(42,58,85,.3)">
+          <span style="color:<%= o.side==='buy'?'var(--accent)':'var(--red)' %>"><%= o.side==='buy'?'매수':'매도' %></span>
+          <span>₩<%= o.price.toLocaleString() %></span>
+          <span style="color:var(--text2)"><%= o.amount %></span>
+          <span class="badge" style="font-size:10px;background:<%= o.status==='open'?'var(--accent2)':o.status==='filled'?'var(--accent)':'var(--border)' %>"><%= o.status %></span>
+          <% if (o.status === 'open') { %>
+          <button onclick="cancelOrder(<%= o.id %>)" class="btn btn-danger btn-sm" style="padding:2px 6px;font-size:10px">취소</button>
+          <% } %>
+        </div>
+        <% }) %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const COIN = '<%= coin %>';
+let currentSide = 'buy';
+let chartData = { labels: [], prices: [] };
+let chart;
+
+// 차트 초기화
+async function initChart() {
+  const res = await fetch(`/trade/api/chart/${COIN}`);
+  const rows = await res.json();
+  chartData.labels = rows.map(r => r.recorded_at.slice(11,16));
+  chartData.prices = rows.map(r => r.price);
+
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartData.labels,
+      datasets: [{
+        label: `${COIN}/KRW`,
+        data: chartData.prices,
+        borderColor: '#00c896',
+        backgroundColor: 'rgba(0,200,150,0.08)',
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(42,58,85,.4)' }, ticks: { color: '#94a3b8', maxTicksLimit: 8 } },
+        y: {
+          grid: { color: 'rgba(42,58,85,.4)' },
+          ticks: { color: '#94a3b8', callback: v => '₩' + v.toLocaleString() }
+        }
+      }
+    }
+  });
+}
+
+// 실시간 가격 폴링 (3초)
+let prevPrice = <%= price %>;
+async function pollPrice() {
+  try {
+    const res = await fetch('/trade/api/price');
+    const prices = await res.json();
+    const p = prices[COIN];
+    if (!p) return;
+
+    document.getElementById('curPrice').textContent = '₩' + p.toLocaleString();
+    document.getElementById('bookPrice').textContent = '₩' + p.toLocaleString();
+
+    const pct = ((p - prevPrice) / prevPrice * 100).toFixed(2);
+    const el = document.getElementById('curChange');
+    el.textContent = (pct >= 0 ? '+' : '') + pct + '%';
+    el.className = 'cur-change ' + (pct >= 0 ? 'up' : 'down');
+
+    // 차트에 포인트 추가
+    if (chart) {
+      const now = new Date().toTimeString().slice(0,5);
+      chart.data.labels.push(now);
+      chart.data.datasets[0].data.push(p);
+      if (chart.data.labels.length > 60) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+      }
+      chart.update('none');
+    }
+
+    // 주문가격 동기화 (지정가)
+    if (document.getElementById('orderType').value === 'market') {
+      document.getElementById('priceInput').value = p;
+    }
+    updateTotal();
+    prevPrice = p;
+  } catch(e) {}
+}
+
+// 탭 전환 (매수/매도)
+function setTab(side, btn) {
+  currentSide = side;
+  document.getElementById('sideInput').value = side;
+  document.querySelectorAll('.order-tab button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const submitBtn = document.getElementById('submitBtn');
+  if (side === 'buy') {
+    submitBtn.textContent = '매수';
+    submitBtn.style.background = 'var(--accent)';
+    submitBtn.style.color = '#000';
+  } else {
+    submitBtn.textContent = '매도';
+    submitBtn.style.background = 'var(--red)';
+    submitBtn.style.color = '#fff';
+  }
+}
+
+function togglePrice() {
+  const isMarket = document.getElementById('orderType').value === 'market';
+  document.getElementById('priceGroup').style.opacity = isMarket ? '0.4' : '1';
+  document.getElementById('priceInput').disabled = isMarket;
+}
+
+function setPrice(p) {
+  document.getElementById('priceInput').value = p;
+  updateTotal();
+}
+
+function updateTotal() {
+  const p = parseFloat(document.getElementById('priceInput').value) || 0;
+  const a = parseFloat(document.getElementById('amountInput').value) || 0;
+  document.getElementById('totalDisplay').textContent = '₩' + Math.round(p * a).toLocaleString();
+}
+
+document.getElementById('priceInput')?.addEventListener('input', updateTotal);
+document.getElementById('amountInput')?.addEventListener('input', updateTotal);
+
+async function submitOrder(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = new URLSearchParams(new FormData(form));
+  const msg = document.getElementById('orderMsg');
+  try {
+    const res = await fetch('/trade/order', { method: 'POST', body: data });
+    const json = await res.json();
+    msg.textContent = json.message;
+    msg.style.color = json.success ? 'var(--accent)' : 'var(--red)';
+    if (json.success) setTimeout(() => location.reload(), 1200);
+  } catch(e) {
+    msg.textContent = '오류 발생';
+    msg.style.color = 'var(--red)';
+  }
+}
+
+async function cancelOrder(id) {
+  const res = await fetch(`/trade/order/${id}/cancel`, { method: 'POST' });
+  const json = await res.json();
+  alert(json.message);
+  if (json.success) location.reload();
+}
+
+initChart();
+updateTotal();
+setInterval(pollPrice, 3000);
+</script>
+</body>
+</html>

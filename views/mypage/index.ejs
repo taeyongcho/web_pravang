@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>마이페이지 - PRAVANG</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+  <div class="page-title">마이페이지</div>
+
+  <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+  <% if (error)   { %><div class="alert alert-error"><%= error %></div><% } %>
+
+  <div class="grid-2" style="margin-bottom:20px;align-items:start">
+
+    <!-- 프로필 정보 -->
+    <div class="card">
+      <div class="card-title">프로필 수정 <span class="vuln-tag">A04 - Mass Assignment</span></div>
+      <div class="alert alert-warning" style="font-size:12px;margin-bottom:12px">
+        ⚠️ role 파라미터를 함께 전송하면 권한 상승이 가능합니다.<br>
+        Burp Suite에서 <code>role=admin</code> 파라미터를 추가해보세요.
+      </div>
+      <form method="POST" action="/mypage/profile">
+        <div class="form-group">
+          <label>아이디</label>
+          <input type="text" name="username" value="<%= user.username %>">
+        </div>
+        <div class="form-group">
+          <label>이메일</label>
+          <input type="email" name="email" value="<%= user.email || '' %>">
+        </div>
+        <div class="form-group">
+          <label>
+            권한 (role)
+            <span class="vuln-tag">서버에서 그대로 저장</span>
+          </label>
+          <input type="text" name="role" value="<%= user.role %>"
+            style="color:<%= user.role==='admin'?'var(--red)':'var(--text)' %>">
+        </div>
+        <button type="submit" class="btn btn-primary">저장</button>
+      </form>
+    </div>
+
+    <!-- 비밀번호 변경 -->
+    <div class="card">
+      <div class="card-title">비밀번호 변경 <span class="vuln-tag">A02 - 현재 비밀번호 확인 없음</span></div>
+      <div class="alert alert-warning" style="font-size:12px;margin-bottom:12px">
+        ⚠️ 현재 비밀번호를 확인하지 않고 변경됩니다.<br>
+        세션만 탈취하면 비밀번호 변경이 가능합니다.
+      </div>
+
+      <!-- 현재 비밀번호 노출 (A02) -->
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:12px;font-size:13px">
+        <div style="color:var(--text2);font-size:11px;margin-bottom:4px">현재 저장된 비밀번호 (평문 노출)</div>
+        <code style="color:var(--red)"><%= user.password %></code>
+      </div>
+
+      <form method="POST" action="/mypage/password">
+        <div class="form-group">
+          <label>새 비밀번호 (평문 저장됨)</label>
+          <input type="text" name="new_password" placeholder="새 비밀번호">
+        </div>
+        <button type="submit" class="btn btn-primary">변경</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="grid-2" style="align-items:start">
+    <!-- 자산 현황 -->
+    <div class="card">
+      <div class="card-title">자산 현황</div>
+      <table>
+        <tr><th>자산</th><th>잔액</th></tr>
+        <tr><td>KRW</td><td><strong>₩<%= user.balance_krw.toLocaleString() %></strong></td></tr>
+        <tr><td>BTC</td><td><strong><%= user.balance_btc.toFixed(8) %></strong></td></tr>
+        <tr><td>ETH</td><td><strong><%= user.balance_eth.toFixed(4) %></strong></td></tr>
+        <tr>
+          <td>API Key <span class="vuln-tag">노출</span></td>
+          <td><code style="font-size:11px"><%= user.api_key %></code></td>
+        </tr>
+        <tr>
+          <td>계정 ID</td>
+          <td><code>#<%= user.id %></code> <a href="/dashboard/account/<%= user.id %>" style="font-size:11px">(IDOR 테스트)</a></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 챌린지 진행 현황 -->
+    <div class="card">
+      <div class="card-title">챌린지 풀이 현황 (<%= solves.length %>개)</div>
+      <% if (solves.length === 0) { %>
+      <p style="color:var(--text2);font-size:13px;padding:12px 0">아직 풀린 챌린지가 없습니다.</p>
+      <a href="/challenges" class="btn btn-primary btn-sm">챌린지 시작하기</a>
+      <% } else { %>
+      <div style="margin-bottom:12px">
+        <div style="background:var(--border);border-radius:99px;height:8px;overflow:hidden">
+          <div style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:<%= Math.round(solves.length/13*100) %>%;border-radius:99px"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px"><%= Math.round(solves.length/13*100) %>% 달성</div>
+      </div>
+      <% solves.forEach(s => { %>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid rgba(42,58,85,.3)">
+        <span style="color:var(--accent)">✔ <%= s.challenge_id %></span>
+        <span style="color:var(--text2)"><%= s.solved_at.slice(0,16) %></span>
+      </div>
+      <% }) %>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- 최근 거래내역 -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">최근 거래내역</div>
+    <% if (txs.length === 0) { %>
+    <p style="color:var(--text2);text-align:center;padding:20px">거래 내역이 없습니다.</p>
+    <% } else { %>
+    <table>
+      <tr><th>타입</th><th>코인</th><th>금액</th><th>메모</th><th>날짜</th></tr>
+      <% txs.forEach(tx => { %>
+      <tr>
+        <td><%= tx.tx_type %></td>
+        <td><%= tx.coin %></td>
+        <td><%= tx.amount %></td>
+        <td style="color:var(--text2)"><%= tx.memo || '-' %></td>
+        <td style="color:var(--text2);font-size:12px"><%= tx.created_at %></td>
+      </tr>
+      <% }) %>
+    </table>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>
