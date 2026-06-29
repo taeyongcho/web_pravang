@@ -10,7 +10,27 @@ const crypto = require('crypto');
 router.get('/', requireAdmin, (req, res) => {
   const users = all('SELECT * FROM users');
   const txs = all('SELECT * FROM transactions ORDER BY created_at DESC LIMIT 20');
-  res.render('admin/index', { users, txs, user: req.session.user, result: null });
+
+  // 대시보드 통계
+  const stats = {
+    totalUsers:   (get('SELECT COUNT(*) as c FROM users') || {}).c || 0,
+    activeUsers:  (get("SELECT COUNT(DISTINCT user_id) as c FROM login_attempts WHERE success=1 AND attempted_at > datetime('now','-1 day')") || {}).c || 0,
+    todaySolves:  (get("SELECT COUNT(*) as c FROM solves WHERE solved_at > datetime('now','start of day')") || {}).c || 0,
+    totalSolves:  (get('SELECT COUNT(*) as c FROM solves') || {}).c || 0,
+    totalOrders:  (get('SELECT COUNT(*) as c FROM shop_orders') || {}).c || 0,
+    pendingOrders:(get("SELECT COUNT(*) as c FROM shop_orders WHERE status='pending'") || {}).c || 0,
+    totalCodes:   (get('SELECT COUNT(*) as c FROM invite_codes') || {}).c || 0,
+    usedCodes:    (get('SELECT SUM(used_count) as c FROM invite_codes') || {}).c || 0,
+  };
+
+  // 최근 챌린지 풀이 (5건)
+  const recentSolves = all(`
+    SELECT u.username, s.challenge_id, s.solved_at
+    FROM solves s JOIN users u ON s.user_id = u.id
+    ORDER BY s.solved_at DESC LIMIT 5
+  `);
+
+  res.render('admin/index', { users, txs, user: req.session.user, result: null, stats, recentSolves });
 });
 
 // A03: 관리자용 SQL 직접 실행 기능
@@ -19,7 +39,35 @@ router.post('/query', requireAdmin, (req, res) => {
   const result = rawQuery(sql);
   const users = all('SELECT * FROM users');
   const txs = all('SELECT * FROM transactions ORDER BY created_at DESC LIMIT 20');
-  res.render('admin/index', { users, txs, user: req.session.user, result, executedSql: sql });
+  const stats = {
+    totalUsers:   (get('SELECT COUNT(*) as c FROM users') || {}).c || 0,
+    activeUsers:  (get("SELECT COUNT(DISTINCT user_id) as c FROM login_attempts WHERE success=1 AND attempted_at > datetime('now','-1 day')") || {}).c || 0,
+    todaySolves:  (get("SELECT COUNT(*) as c FROM solves WHERE solved_at > datetime('now','start of day')") || {}).c || 0,
+    totalSolves:  (get('SELECT COUNT(*) as c FROM solves') || {}).c || 0,
+    totalOrders:  (get('SELECT COUNT(*) as c FROM shop_orders') || {}).c || 0,
+    pendingOrders:(get("SELECT COUNT(*) as c FROM shop_orders WHERE status='pending'") || {}).c || 0,
+    totalCodes:   (get('SELECT COUNT(*) as c FROM invite_codes') || {}).c || 0,
+    usedCodes:    (get('SELECT SUM(used_count) as c FROM invite_codes') || {}).c || 0,
+  };
+  const recentSolves = all(`SELECT u.username, s.challenge_id, s.solved_at FROM solves s JOIN users u ON s.user_id = u.id ORDER BY s.solved_at DESC LIMIT 5`);
+  res.render('admin/index', { users, txs, user: req.session.user, result, executedSql: sql, stats, recentSolves });
+});
+
+// 사용자 편집 (잔액 조정, 권한 변경, 활성화)
+router.post('/user/edit', requireAdmin, (req, res) => {
+  const { userId, role, balance_krw, balance_btc, balance_eth, is_active } = req.body;
+  run(`UPDATE users SET role=?, balance_krw=?, balance_btc=?, balance_eth=?, is_active=? WHERE id=?`,
+    [role, parseFloat(balance_krw)||0, parseFloat(balance_btc)||0, parseFloat(balance_eth)||0,
+     is_active === '1' ? 1 : 0, userId]);
+  saveDb();
+  res.redirect('/admin?success=수정완료');
+});
+
+// 사용자 풀이 초기화
+router.post('/user/reset-solves', requireAdmin, (req, res) => {
+  run('DELETE FROM solves WHERE user_id = ?', [req.body.userId]);
+  saveDb();
+  res.redirect('/admin?success=풀이초기화완료');
 });
 
 // A10: SSRF - 외부 URL로 시세 정보 가져오기

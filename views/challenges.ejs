@@ -106,12 +106,45 @@
   </div>
 
   <!-- 랭킹 링크 -->
-  <div style="text-align:right;margin-bottom:16px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div></div>
     <a href="/challenges/ranking" class="btn btn-secondary btn-sm">🏆 랭킹 보기</a>
   </div>
 
+  <%
+    const categories = [...new Set(challenges.map(c => c.category))];
+  %>
+
+  <!-- ③ 카테고리별 진행도 -->
+  <% if (user) { %>
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title">카테고리별 진행 현황</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:8px">
+      <% categories.forEach(cat => {
+           const catChallenges = challenges.filter(c => c.category === cat);
+           const catSolved = catChallenges.filter(c => solvedIds.includes(c.id)).length;
+           const catTotal = catChallenges.length;
+           const catPct = Math.round(catSolved / catTotal * 100);
+           const catScore = catChallenges.filter(c => solvedIds.includes(c.id)).reduce((s,c) => s + (SCORE[c.difficulty]||100), 0);
+           const catMaxScore = catChallenges.reduce((s,c) => s + (SCORE[c.difficulty]||100), 0);
+      %>
+      <div style="background:var(--bg);border-radius:8px;padding:10px;border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px"><%= cat.split(' - ')[0] %></div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:6px;line-height:1.3"><%= cat.includes(' - ') ? cat.split(' - ')[1] : cat %></div>
+        <div style="background:var(--border);border-radius:99px;height:5px;overflow:hidden;margin-bottom:4px">
+          <div style="height:100%;width:<%= catPct %>%;background:<%= catPct===100 ? 'var(--accent)' : 'var(--accent2)' %>;border-radius:99px;transition:width .4s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px">
+          <span style="color:<%= catPct===100 ? 'var(--accent)' : 'var(--text2)' %>"><%= catSolved %>/<%= catTotal %> <%= catPct===100 ? '✔ 완료' : '' %></span>
+          <span style="color:var(--accent);font-weight:600"><%= catScore %>/<%= catMaxScore %>pt</span>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
   <!-- 챌린지 목록 -->
-  <% const categories = [...new Set(challenges.map(c => c.category))] %>
   <% categories.forEach(cat => { %>
     <div class="cat-header"><%= cat %></div>
     <% challenges.filter(c => c.category === cat).forEach(ch => {

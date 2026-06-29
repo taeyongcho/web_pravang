@@ -5,95 +5,246 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>관리자 - AXIO</title>
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+    .stat-box { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; }
+    .stat-box .val { font-size:28px; font-weight:700; color:var(--accent); line-height:1; margin-bottom:4px; }
+    .stat-box .lbl { font-size:12px; color:var(--text2); }
+    .stat-box .sub { font-size:11px; color:var(--text2); margin-top:4px; }
+    .admin-tabs { display:flex; gap:4px; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:8px; }
+    .admin-tab { padding:6px 16px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; color:var(--text2); background:none; border:none; }
+    .admin-tab.active { background:var(--accent); color:#000; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+    .user-edit-form { display:none; background:var(--bg); border-radius:8px; padding:12px; margin-top:8px; border:1px solid var(--border); }
+    .user-edit-form.open { display:block; }
+    @media(max-width:768px){ .stat-grid{grid-template-columns:repeat(2,1fr);} }
+  </style>
 </head>
 <body>
 <%- include('../partials/nav') %>
 <div class="container">
   <div class="page-title">관리자 패널 <span class="vuln-tag">A01 - ?role=admin 우회 가능</span></div>
 
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:20px">
-    <a href="/admin/price-fetch" class="btn btn-secondary">📡 SSRF - 시세 가져오기</a>
-    <a href="/admin/download?file=../../package.json" class="btn btn-secondary">📂 Path Traversal 테스트</a>
-    <a href="/admin/shell-view" class="btn btn-danger">💀 웹셸 실행 (RCE)</a>
-    <a href="/admin/invite-codes" class="btn btn-primary">🎫 초대 코드 관리</a>
+  <% if (typeof req !== 'undefined' && req.query && req.query.success) { %>
+  <div class="alert alert-success" style="margin-bottom:16px"><%= req.query.success %></div>
+  <% } %>
+
+  <!-- 빠른 메뉴 -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:20px">
+    <a href="/admin/price-fetch" class="btn btn-secondary">📡 SSRF 테스트</a>
+    <a href="/admin/download?file=../../package.json" class="btn btn-secondary">📂 Path Traversal</a>
+    <a href="/admin/shell-view" class="btn btn-danger">💀 웹셸 실행</a>
+    <a href="/admin/invite-codes" class="btn btn-primary">🎫 초대 코드</a>
   </div>
 
-  <!-- SQL 직접 실행 -->
-  <div class="card" style="margin-bottom:20px">
-    <div class="card-title">🔧 SQL 직접 실행 <span class="vuln-tag">A03 - SQL Injection</span></div>
-    <form method="POST" action="/admin/query">
-      <div class="form-group">
-        <label>SQL 쿼리</label>
-        <textarea name="sql" rows="3" placeholder="SELECT * FROM users"><% if (typeof executedSql !== 'undefined') { %><%= executedSql %><% } %></textarea>
-      </div>
-      <button type="submit" class="btn btn-danger btn-sm">실행</button>
-    </form>
+  <!-- ① 통계 대시보드 -->
+  <div class="stat-grid">
+    <div class="stat-box">
+      <div class="val"><%= stats.totalUsers %></div>
+      <div class="lbl">총 사용자</div>
+      <div class="sub">오늘 활성: <%= stats.activeUsers %>명</div>
+    </div>
+    <div class="stat-box">
+      <div class="val"><%= stats.todaySolves %></div>
+      <div class="lbl">오늘 풀이</div>
+      <div class="sub">누적 <%= stats.totalSolves %>건</div>
+    </div>
+    <div class="stat-box">
+      <div class="val"><%= stats.pendingOrders %></div>
+      <div class="lbl">처리중 주문</div>
+      <div class="sub">쇼핑몰 총 <%= stats.totalOrders %>건</div>
+    </div>
+    <div class="stat-box">
+      <div class="val"><%= stats.usedCodes || 0 %></div>
+      <div class="lbl">초대 코드 사용</div>
+      <div class="sub">코드 <%= stats.totalCodes %>개 발급</div>
+    </div>
+  </div>
 
-    <% if (typeof result !== 'undefined' && result) { %>
-    <div style="margin-top:16px">
-      <% if (result.success) { %>
-        <% if (result.results && result.results.length > 0) { %>
-          <% result.results.forEach(res => { %>
-          <table style="margin-bottom:12px">
-            <tr><% res.columns.forEach(c => { %><th><%= c %></th><% }) %></tr>
-            <% res.values.forEach(row => { %>
-            <tr><% row.forEach(v => { %><td><%= v %></td><% }) %></tr>
+  <!-- 최근 챌린지 풀이 -->
+  <% if (recentSolves && recentSolves.length > 0) { %>
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">🕐 최근 챌린지 풀이</div>
+    <table>
+      <tr><th>사용자</th><th>챌린지</th><th>풀이 시각</th></tr>
+      <% recentSolves.forEach(s => { %>
+      <tr>
+        <td><strong><%= s.username %></strong></td>
+        <td><code><%= s.challenge_id %></code></td>
+        <td style="color:var(--text2);font-size:12px"><%= s.solved_at.slice(0,16) %></td>
+      </tr>
+      <% }) %>
+    </table>
+  </div>
+  <% } %>
+
+  <!-- 탭 메뉴 -->
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchTab('users', this)">👥 사용자 관리</button>
+    <button class="admin-tab" onclick="switchTab('sql', this)">🔧 SQL 실행</button>
+    <button class="admin-tab" onclick="switchTab('txs', this)">💸 거래 내역</button>
+  </div>
+
+  <!-- ② 사용자 관리 탭 -->
+  <div id="tab-users" class="tab-panel active">
+    <div class="card">
+      <div class="card-title">사용자 목록 (<%= users.length %>명)</div>
+      <div style="overflow-x:auto">
+      <table>
+        <tr><th>ID</th><th>아이디</th><th>비밀번호</th><th>권한</th><th>KRW 잔액</th><th>BTC</th><th>상태</th><th>관리</th></tr>
+        <% users.forEach(u => { %>
+        <tr>
+          <td style="color:var(--text2)"><%= u.id %></td>
+          <td><strong><%= u.username %></strong></td>
+          <td><code style="color:#ff6b7a;font-size:11px"><%= u.password %></code></td>
+          <td><span class="badge <%= u.role === 'admin' ? 'admin' : '' %>"><%= u.role %></span></td>
+          <td>₩<%= u.balance_krw ? Math.floor(u.balance_krw).toLocaleString() : 0 %></td>
+          <td><%= u.balance_btc || 0 %></td>
+          <td>
+            <span style="color:<%= u.is_active !== 0 ? 'var(--accent)' : 'var(--red)' %>;font-size:12px;font-weight:600">
+              <%= u.is_active !== 0 ? '활성' : '비활성' %>
+            </span>
+          </td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-secondary btn-sm" onclick="toggleEdit(<%= u.id %>)">편집</button>
+            <form method="POST" action="/admin/user/reset-solves" style="display:inline" onsubmit="return confirm('풀이 기록을 초기화할까요?')">
+              <input type="hidden" name="userId" value="<%= u.id %>">
+              <button type="submit" class="btn btn-secondary btn-sm">풀이초기화</button>
+            </form>
+            <form method="POST" action="/admin/user/delete" style="display:inline" onsubmit="return confirm('삭제할까요?')">
+              <input type="hidden" name="userId" value="<%= u.id %>">
+              <button type="submit" class="btn btn-danger btn-sm">삭제</button>
+            </form>
+          </td>
+        </tr>
+        <!-- 인라인 편집 폼 -->
+        <tr id="edit-<%= u.id %>" style="display:none">
+          <td colspan="8" style="padding:0">
+            <form method="POST" action="/admin/user/edit" style="background:var(--bg);padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;align-items:end">
+              <input type="hidden" name="userId" value="<%= u.id %>">
+              <div>
+                <label style="font-size:11px;color:var(--text2)">권한</label>
+                <select name="role" style="width:100%">
+                  <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>user</option>
+                  <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>admin</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text2)">KRW 잔액</label>
+                <input type="number" name="balance_krw" value="<%= u.balance_krw || 0 %>" style="width:100%">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text2)">BTC 잔액</label>
+                <input type="number" name="balance_btc" value="<%= u.balance_btc || 0 %>" step="0.00001" style="width:100%">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text2)">ETH 잔액</label>
+                <input type="number" name="balance_eth" value="<%= u.balance_eth || 0 %>" step="0.0001" style="width:100%">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text2)">계정 상태</label>
+                <select name="is_active" style="width:100%">
+                  <option value="1" <%= u.is_active !== 0 ? 'selected' : '' %>>활성</option>
+                  <option value="0" <%= u.is_active === 0 ? 'selected' : '' %>>비활성 (로그인 차단)</option>
+                </select>
+              </div>
+              <div>
+                <button type="submit" class="btn btn-primary btn-sm" style="width:100%;margin-top:16px">저장</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SQL 실행 탭 -->
+  <div id="tab-sql" class="tab-panel">
+    <div class="card">
+      <div class="card-title">🔧 SQL 직접 실행 <span class="vuln-tag">A03 - SQL Injection</span></div>
+      <form method="POST" action="/admin/query">
+        <div class="form-group">
+          <label>SQL 쿼리</label>
+          <textarea name="sql" rows="4" placeholder="SELECT * FROM users"><% if (typeof executedSql !== 'undefined') { %><%= executedSql %><% } %></textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="setSQL('SELECT * FROM users')">users 조회</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="setSQL('SELECT * FROM solves ORDER BY solved_at DESC')">풀이 기록</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="setSQL('SELECT * FROM invite_codes')">초대 코드</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="setSQL('SELECT * FROM shop_orders')">주문 목록</button>
+        </div>
+        <button type="submit" class="btn btn-danger btn-sm">실행</button>
+      </form>
+      <% if (typeof result !== 'undefined' && result) { %>
+      <div style="margin-top:16px;overflow-x:auto">
+        <% if (result.success) { %>
+          <% if (result.results && result.results.length > 0) { %>
+            <% result.results.forEach(res => { %>
+            <table style="margin-bottom:12px">
+              <tr><% res.columns.forEach(c => { %><th><%= c %></th><% }) %></tr>
+              <% res.values.forEach(row => { %>
+              <tr><% row.forEach(v => { %><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis"><%= v %></td><% }) %></tr>
+              <% }) %>
+            </table>
+            <div style="font-size:12px;color:var(--text2)"><%= res.values.length %>행 반환</div>
             <% }) %>
-          </table>
-          <% }) %>
+          <% } else { %>
+          <div class="alert alert-success">쿼리 실행 완료 (결과 없음)</div>
+          <% } %>
         <% } else { %>
-        <div class="alert alert-success">쿼리 실행 완료 (결과 없음)</div>
+        <div class="alert alert-error">오류: <%= result.error %></div>
         <% } %>
-      <% } else { %>
-      <div class="alert alert-error">오류: <%= result.error %></div>
+      </div>
       <% } %>
     </div>
-    <% } %>
   </div>
 
-  <!-- 유저 목록 -->
-  <div class="card" style="margin-bottom:20px">
-    <div class="card-title">유저 목록</div>
-    <table>
-      <tr><th>ID</th><th>아이디</th><th>비밀번호</th><th>이메일</th><th>권한</th><th>KRW</th><th>BTC</th><th>삭제</th></tr>
-      <% users.forEach(u => { %>
-      <tr>
-        <td><%= u.id %></td>
-        <td><strong><%= u.username %></strong></td>
-        <td><code style="color:#ff6b7a"><%= u.password %></code></td>
-        <td><%= u.email %></td>
-        <td><span class="badge <%= u.role === 'admin' ? 'admin' : '' %>"><%= u.role %></span></td>
-        <td><%= u.balance_krw ? u.balance_krw.toLocaleString() : 0 %></td>
-        <td><%= u.balance_btc %></td>
-        <td>
-          <form method="POST" action="/admin/user/delete" style="display:inline">
-            <input type="hidden" name="userId" value="<%= u.id %>">
-            <button type="submit" class="btn btn-danger btn-sm">삭제</button>
-          </form>
-        </td>
-      </tr>
-      <% }) %>
-    </table>
-  </div>
-
-  <!-- 최근 거래 -->
-  <div class="card">
-    <div class="card-title">최근 거래내역</div>
-    <table>
-      <tr><th>ID</th><th>FROM</th><th>TO</th><th>코인</th><th>금액</th><th>타입</th><th>날짜</th></tr>
-      <% txs.forEach(tx => { %>
-      <tr>
-        <td><%= tx.id %></td>
-        <td><%= tx.from_user_id || '-' %></td>
-        <td><%= tx.to_user_id || '-' %></td>
-        <td><%= tx.coin %></td>
-        <td><%= tx.amount %></td>
-        <td><%= tx.tx_type %></td>
-        <td style="color:var(--text2)"><%= tx.created_at %></td>
-      </tr>
-      <% }) %>
-    </table>
+  <!-- 거래 내역 탭 -->
+  <div id="tab-txs" class="tab-panel">
+    <div class="card">
+      <div class="card-title">최근 거래내역 (20건)</div>
+      <div style="overflow-x:auto">
+      <table>
+        <tr><th>ID</th><th>FROM</th><th>TO</th><th>코인</th><th>금액</th><th>타입</th><th>날짜</th></tr>
+        <% txs.forEach(tx => { %>
+        <tr>
+          <td><%= tx.id %></td>
+          <td><%= tx.from_user_id || '-' %></td>
+          <td><%= tx.to_user_id || '-' %></td>
+          <td><strong><%= tx.coin %></strong></td>
+          <td><%= tx.amount %></td>
+          <td><span class="badge" style="font-size:10px"><%= tx.tx_type %></span></td>
+          <td style="color:var(--text2);font-size:11px"><%= tx.created_at.slice(0,16) %></td>
+        </tr>
+        <% }) %>
+      </table>
+      </div>
+    </div>
   </div>
 </div>
+
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+function toggleEdit(id) {
+  const row = document.getElementById('edit-' + id);
+  row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+function setSQL(q) {
+  document.querySelector('textarea[name=sql]').value = q;
+  switchTab('sql', document.querySelectorAll('.admin-tab')[1]);
+}
+// SQL 탭 자동 활성화 (실행 결과가 있을 때)
+<% if (typeof result !== 'undefined' && result) { %>
+window.addEventListener('DOMContentLoaded', () => switchTab('sql', document.querySelectorAll('.admin-tab')[1]));
+<% } %>
+</script>
 </body>
 </html>
