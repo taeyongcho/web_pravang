@@ -144,6 +144,66 @@ CREATE TABLE IF NOT EXISTS price_history (
   recorded_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS shop_products (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  description TEXT,
+  price REAL NOT NULL,
+  stock INTEGER DEFAULT 100,
+  category TEXT,
+  image_url TEXT,
+  seller TEXT DEFAULT 'AXIO Mall',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS shop_reviews (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  product_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  username TEXT,
+  rating INTEGER DEFAULT 5,
+  content TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS shop_cart (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  product_id INTEGER NOT NULL,
+  quantity INTEGER DEFAULT 1,
+  unit_price REAL NOT NULL,
+  added_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS shop_orders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  total REAL NOT NULL,
+  status TEXT DEFAULT 'pending',
+  shipping_name TEXT,
+  shipping_addr TEXT,
+  shipping_phone TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS shop_order_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  order_id INTEGER NOT NULL,
+  product_id INTEGER NOT NULL,
+  product_name TEXT,
+  quantity INTEGER,
+  unit_price REAL,
+  total REAL
+);
+
+INSERT OR IGNORE INTO shop_products (id, name, description, price, stock, category, image_url) VALUES
+  (1, 'USB 보안키 Pro', '하드웨어 기반 2FA 인증 기기. FIDO2/WebAuthn 지원.', 89000, 50, '보안장비', '/img/usb-key.svg'),
+  (2, '웹해킹 입문서', 'OWASP Top 10 기반 실전 웹 해킹 & 보안 가이드북', 32000, 200, '도서', '/img/book.svg'),
+  (3, '버프스위트 Pro 라이선스', 'Burp Suite Professional 1년 라이선스 코드', 450000, 20, '소프트웨어', '/img/burp.svg'),
+  (4, '리눅스 서버 보안 강화 패키지', 'SELinux, fail2ban, UFW 설정 컨설팅 서비스', 250000, 10, '서비스', '/img/linux.svg'),
+  (5, '취약점 스캐너 USB', '오프라인 네트워크 취약점 스캐너 휴대용 기기', 180000, 30, '보안장비', '/img/scanner.svg'),
+  (6, '모의해킹 보고서 템플릿', '전문가급 모의해킹 결과 보고서 워드/PDF 템플릿', 15000, 999, '디지털', '/img/report.svg');
+
 INSERT OR IGNORE INTO price_history (coin, price, recorded_at) VALUES
   ('BTC', 84000000, datetime('now', '-60 minutes')),
   ('BTC', 84200000, datetime('now', '-50 minutes')),

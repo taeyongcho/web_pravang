@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>주문 #<%= order.id %> - AXIO Mall</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('../partials/nav-shop') %>
+<div class="container">
+  <div style="margin-bottom:16px"><a href="/shop/orders" style="color:var(--text2);font-size:13px">← 주문 내역</a></div>
+
+  <% if (!isOwner) { %>
+  <div class="attack-banner" style="position:relative;margin-bottom:16px;border-radius:8px">
+    ⚠️ <strong>IDOR 취약점 발견!</strong> 다른 사용자(<strong><%= order.username %></strong>)의 주문 정보를 열람하고 있습니다.
+    주문자 확인 없이 누구나 접근 가능합니다.
+  </div>
+  <% } %>
+
+  <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+
+  <div class="grid-2" style="align-items:start">
+    <div class="card">
+      <div class="card-title">
+        주문 #<%= order.id %>
+        <% if (!isOwner) { %><span class="vuln-tag">A01 - 타인 주문 열람</span><% } %>
+        <span class="badge" style="background:<%= order.status==='pending'?'var(--accent2)':order.status==='cancelled'?'var(--red)':'var(--accent)' %>">
+          <%= order.status === 'pending' ? '처리중' : order.status === 'cancelled' ? '취소됨' : order.status %>
+        </span>
+      </div>
+      <table>
+        <tr><th>상품명</th><th>단가</th><th>수량</th><th>소계</th></tr>
+        <% items.forEach(i => { %>
+        <tr>
+          <td><%= i.product_name %></td>
+          <td>₩<%= i.unit_price.toLocaleString() %></td>
+          <td><%= i.quantity %></td>
+          <td style="color:var(--accent);font-weight:600">₩<%= i.total.toLocaleString() %></td>
+        </tr>
+        <% }) %>
+      </table>
+      <div style="text-align:right;margin-top:12px;font-size:16px;font-weight:700">
+        합계: <span style="color:var(--accent)">₩<%= order.total.toLocaleString() %></span>
+      </div>
+
+      <% if (order.status === 'pending') { %>
+      <form method="POST" action="/shop/orders/<%= order.id %>/cancel" style="margin-top:16px">
+        <button type="submit" class="btn btn-danger" onclick="return confirm('주문을 취소하시겠습니까?')">
+          주문 취소 <span class="vuln-tag" style="font-size:9px">CSRF 취약</span>
+        </button>
+      </form>
+      <% } %>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">배송 정보</div>
+        <table>
+          <tr><th>주문자</th><td><strong style="color:<%= !isOwner ? 'var(--red)' : 'var(--text)' %>"><%= order.username %></strong></td></tr>
+          <tr><th>수령인</th><td><%= order.shipping_name %></td></tr>
+          <tr><th>배송지</th><td><%= order.shipping_addr || '-' %></td></tr>
+          <tr><th>연락처</th><td><%= order.shipping_phone || '-' %></td></tr>
+          <tr><th>주문일시</th><td style="font-size:12px;color:var(--text2)"><%= order.created_at %></td></tr>
+        </table>
+      </div>
+
+      <!-- 배송지 변경 (CSRF + IDOR 취약) -->
+      <% if (order.status === 'pending') { %>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">배송지 변경 <span class="vuln-tag">CSRF + IDOR</span></div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">
+          CSRF 토큰 없음 + 주문 소유권 미검증 → 외부 페이지에서 변조 가능
+        </div>
+        <form method="POST" action="/shop/orders/<%= order.id %>/address">
+          <div class="form-group">
+            <label>새 배송지</label>
+            <input type="text" name="shipping_addr" value="<%= order.shipping_addr || '' %>" placeholder="새 주소">
+          </div>
+          <div class="form-group">
+            <label>연락처</label>
+            <input type="text" name="shipping_phone" value="<%= order.shipping_phone || '' %>">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">배송지 변경</button>
+        </form>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<script>
+<% if (!isOwner) { %>
+if (window.showAttackBanner) {
+  window.showAttackBanner('A01', 'IDOR - 타인 주문 열람', '주문 ID <%= order.id %>는 사용자 <%= order.username %>의 주문이지만 접근 제어가 없어 열람되었습니다.');
+}
+<% } %>
+</script>
+</body>
+</html>

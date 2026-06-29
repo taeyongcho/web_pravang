@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AXIO Mall - 가상 쇼핑몰</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .shop-header { margin-bottom: 24px; }
+    .shop-header h2 { font-size: 22px; font-weight: 700; }
+    .search-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .search-bar input { flex: 1; min-width: 200px; }
+    .category-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+    .category-tab {
+      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      background: var(--card); border: 1px solid var(--border); color: var(--text2);
+      text-decoration: none; transition: all .15s;
+    }
+    .category-tab:hover, .category-tab.active {
+      background: var(--accent); color: #000; border-color: var(--accent);
+    }
+    .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .product-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; transition: all .2s; text-decoration: none; color: var(--text);
+      display: flex; flex-direction: column;
+    }
+    .product-card:hover { border-color: var(--accent2); transform: translateY(-2px); }
+    .product-img { font-size: 48px; text-align: center; margin-bottom: 12px; }
+    .product-name { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+    .product-desc { font-size: 12px; color: var(--text2); line-height: 1.5; flex: 1; margin-bottom: 12px; }
+    .product-price { font-size: 18px; font-weight: 700; color: var(--accent); }
+    .product-category { font-size: 11px; color: var(--text2); margin-top: 4px; }
+    @media (max-width: 768px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .product-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<%- include('../partials/nav-shop') %>
+<div class="container">
+  <div class="shop-header">
+    <h2>AXIO Mall <span class="vuln-tag">가상 쇼핑몰 · 취약점 훈련</span></h2>
+  </div>
+
+  <% if (debugQuery) { %>
+  <div class="alert alert-error" style="font-size:12px">
+    ⚠️ <strong>A03 SQLi 주의:</strong> 검색어가 쿼리에 직접 삽입됩니다.<br>
+    <code>실행 쿼리: <%= debugQuery %></code>
+  </div>
+  <% } %>
+
+  <!-- 검색 -->
+  <form method="GET" action="/shop" class="search-bar">
+    <input type="text" name="q" value="<%= keyword %>" placeholder="상품명 검색 (SQLi 취약!)">
+    <% if (category) { %><input type="hidden" name="category" value="<%= category %>"><% } %>
+    <button type="submit" class="btn btn-primary">검색</button>
+    <a href="/shop" class="btn btn-secondary">초기화</a>
+  </form>
+
+  <!-- 카테고리 탭 -->
+  <div class="category-tabs">
+    <a href="/shop" class="category-tab <%= !category ? 'active' : '' %>">전체</a>
+    <% categories.forEach(c => { %>
+    <a href="/shop?category=<%= c %>" class="category-tab <%= category === c ? 'active' : '' %>"><%= c %></a>
+    <% }) %>
+  </div>
+
+  <!-- 상품 목록 -->
+  <% if (products.length === 0) { %>
+  <div class="card" style="text-align:center;padding:40px;color:var(--text2)">
+    <p>검색 결과가 없습니다.<br><code>keyword' OR '1'='1</code> 같은 SQLi 페이로드를 시도해보세요.</p>
+  </div>
+  <% } else { %>
+  <div class="product-grid">
+    <% products.forEach(p => { %>
+    <a href="/shop/product/<%= p.id %>" class="product-card">
+      <div class="product-img">
+        <% const icons = {'보안장비':'🔐','도서':'📚','소프트웨어':'💻','서비스':'🛠️','디지털':'📄'}; %>
+        <%= icons[p.category] || '📦' %>
+      </div>
+      <div class="product-name"><%= p.name %></div>
+      <div class="product-desc"><%= p.description %></div>
+      <div class="product-price">₩<%= p.price.toLocaleString() %></div>
+      <div class="product-category"><%= p.category %> · 재고 <%= p.stock %>개</div>
+    </a>
+    <% }) %>
+  </div>
+  <% } %>
+
+  <!-- 취약점 힌트 카드 -->
+  <div class="card" style="margin-top:32px">
+    <div class="card-title">🎯 쇼핑몰 취약점 시나리오</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px">
+      <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border)">
+        <span class="vuln-tag">A03 SQLi</span>
+        <p style="font-size:12px;color:var(--text2);margin-top:6px">검색창에 <code>' OR '1'='1</code> 입력</p>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border)">
+        <span class="vuln-tag">A03 XSS</span>
+        <p style="font-size:12px;color:var(--text2);margin-top:6px">상품 리뷰에 <code>&lt;script&gt;alert(1)&lt;/script&gt;</code></p>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border)">
+        <span class="vuln-tag">A01 IDOR</span>
+        <p style="font-size:12px;color:var(--text2);margin-top:6px">주문 번호 변경으로 타인 주문 조회</p>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border)">
+        <span class="vuln-tag">A04 가격조작</span>
+        <p style="font-size:12px;color:var(--text2);margin-top:6px">장바구니 추가 시 unit_price 파라미터 변조</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

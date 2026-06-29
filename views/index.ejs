@@ -3,53 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PRAVANG - 가상 암호화폐 거래소</title>
+  <title>AXIO VULN LAB - 웹 취약점 모의훈련 센터</title>
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .hub-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 20px;
+    }
+    .hub-title {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .hub-title h1 { font-size: 32px; font-weight: 700; }
+    .hub-title h1 span { color: var(--accent); }
+    .hub-subtitle {
+      text-align: center;
+      color: var(--text2);
+      font-size: 14px;
+      margin-bottom: 48px;
+      line-height: 1.7;
+    }
+    .hub-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .hub-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 32px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all .2s;
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+    .hub-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,200,150,.12);
+    }
+    .hub-card.shop:hover {
+      border-color: #a78bfa;
+      box-shadow: 0 12px 40px rgba(167,139,250,.12);
+    }
+    .hub-card-icon { font-size: 48px; margin-bottom: 16px; }
+    .hub-card-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .hub-card.exchange .hub-card-title { color: var(--accent); }
+    .hub-card.shop .hub-card-title { color: #a78bfa; }
+    .hub-card-desc { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 20px; }
+    .hub-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .hub-card-tags .tag {
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      background: var(--bg); border: 1px solid var(--border);
+      color: var(--text2);
+    }
+    .hub-badge {
+      position: absolute; top: 16px; right: 16px;
+      background: var(--accent); color: #000;
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+    }
+    .hub-badge.new { background: #a78bfa; color: #fff; }
+    .hub-footer {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 640px) {
+      .hub-cards { grid-template-columns: 1fr; }
+      .hub-footer { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 <%- include('partials/nav') %>
+<div class="hub-container">
+  <div class="hub-title">
+    <h1>AXIO <span>VULN LAB</span></h1>
+  </div>
+  <p class="hub-subtitle">
+    웹 취약점 진단 모의훈련 센터 · OWASP Top 10 실습 환경<br>
+    훈련할 시스템을 선택하세요.
+  </p>
 
-<div class="container">
-  <div class="hero">
-    <h1>PRAVANG <span>Exchange</span></h1>
-    <p>웹 취약점 진단 훈련을 위한 가상 암호화폐 거래소입니다.<br>OWASP Top 10 취약점을 직접 찾고 익혀보세요.</p>
-    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:32px">
-      <% if (!user) { %>
-      <a href="/register" class="btn btn-primary">시작하기</a>
-      <a href="/challenges" class="btn btn-secondary">챌린지 목록</a>
-      <% } else { %>
-      <a href="/dashboard" class="btn btn-primary">대시보드</a>
-      <a href="/challenges" class="btn btn-secondary">챌린지 목록</a>
-      <% } %>
-    </div>
-    <div class="stats-bar">
-      <div class="stat-item">
-        <div class="stat-val">11</div>
-        <div class="stat-label">취약점 시나리오</div>
+  <div class="hub-cards">
+    <a href="/dashboard" class="hub-card exchange">
+      <span class="hub-badge">거래소</span>
+      <div class="hub-card-icon">📈</div>
+      <div class="hub-card-title">가상 암호화폐 거래소</div>
+      <div class="hub-card-desc">
+        AXIO Exchange — BTC/ETH/XRP 실시간 거래, 지갑 관리, 송금 기능을 통해
+        거래소 환경의 OWASP Top 10 취약점을 실습합니다.
       </div>
-      <div class="stat-item">
-        <div class="stat-val">10</div>
-        <div class="stat-label">OWASP 카테고리</div>
+      <div class="hub-card-tags">
+        <span class="tag">SQLi</span>
+        <span class="tag">XSS</span>
+        <span class="tag">IDOR</span>
+        <span class="tag">SSRF</span>
+        <span class="tag">JWT</span>
+        <span class="tag">CSRF</span>
       </div>
-      <div class="stat-item">
-        <div class="stat-val">3</div>
-        <div class="stat-label">난이도</div>
+    </a>
+
+    <a href="/shop" class="hub-card shop">
+      <span class="hub-badge new">쇼핑몰</span>
+      <div class="hub-card-icon">🛒</div>
+      <div class="hub-card-title">가상 쇼핑몰</div>
+      <div class="hub-card-desc">
+        AXIO Mall — 상품 검색, 장바구니, 결제, 리뷰 시스템을 통해
+        이커머스 환경의 OWASP Top 10 취약점을 실습합니다.
       </div>
-    </div>
+      <div class="hub-card-tags">
+        <span class="tag">SQLi 검색</span>
+        <span class="tag">XSS 리뷰</span>
+        <span class="tag">IDOR 주문</span>
+        <span class="tag">가격조작</span>
+        <span class="tag">CSRF</span>
+      </div>
+    </a>
   </div>
 
-  <div class="grid-3" style="margin-top:40px">
-    <div class="card">
-      <div class="card-title">💉 Injection</div>
-      <p style="color:var(--text2);font-size:13px;line-height:1.6">SQL Injection, Stored XSS 등 다양한 인젝션 공격을 실습합니다.</p>
+  <div class="hub-footer">
+    <div class="card" style="text-align:center">
+      <div style="font-size:28px;font-weight:700;color:var(--accent)">10</div>
+      <div style="color:var(--text2);font-size:13px">OWASP 카테고리</div>
     </div>
-    <div class="card">
-      <div class="card-title">🔓 Access Control</div>
-      <p style="color:var(--text2);font-size:13px;line-height:1.6">IDOR, 관리자 페이지 우회 등 접근 제어 취약점을 실습합니다.</p>
+    <div class="card" style="text-align:center">
+      <div style="font-size:28px;font-weight:700;color:var(--accent)">20+</div>
+      <div style="color:var(--text2);font-size:13px">취약점 시나리오</div>
     </div>
-    <div class="card">
-      <div class="card-title">🌐 SSRF / Path Traversal</div>
-      <p style="color:var(--text2);font-size:13px;line-height:1.6">서버 측 요청 위조 및 파일 경로 조작 취약점을 실습합니다.</p>
+    <div class="card" style="text-align:center">
+      <a href="/challenges" style="text-decoration:none">
+        <div style="font-size:28px;font-weight:700;color:var(--accent)">🚩</div>
+        <div style="color:var(--text2);font-size:13px">챌린지 도전</div>
+      </a>
     </div>
   </div>
 

@@ -53,6 +53,7 @@ function run(query, params = []) {
   const db = getDbSync();
   db.run(query, params);
   saveDb();
+  return { lastID: db.exec('SELECT last_insert_rowid()')[0]?.values[0][0] || 0 };
 }
 
 // 취약한 raw SQL 실행 (SQL Injection용)

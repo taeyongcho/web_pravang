@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>장바구니 - AXIO Mall</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('../partials/nav-shop') %>
+<div class="container">
+  <div class="page-title">장바구니 <span class="vuln-tag">A04 - 가격 조작</span> <span class="vuln-tag">A08 - CSRF</span></div>
+
+  <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+  <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+  <% if (items.length === 0) { %>
+  <div class="card" style="text-align:center;padding:40px">
+    <p style="color:var(--text2)">장바구니가 비어있습니다.</p>
+    <a href="/shop" class="btn btn-primary" style="margin-top:16px">쇼핑 계속하기</a>
+  </div>
+  <% } else { %>
+  <div class="grid-2" style="align-items:start">
+    <div class="card">
+      <div class="card-title">담은 상품 (<%= items.length %>)</div>
+      <div class="alert alert-error" style="font-size:12px;margin-bottom:12px">
+        ⚠️ unit_price가 서버에서 검증되지 않습니다. 실제 DB 가격(real_price)과 다를 수 있습니다.
+      </div>
+      <table>
+        <tr><th>상품명</th><th>단가(조작됨)</th><th>실제단가</th><th>수량</th><th>소계</th><th></th></tr>
+        <% items.forEach(item => { %>
+        <tr>
+          <td><a href="/shop/product/<%= item.product_id %>" style="color:var(--accent)"><%= item.name %></a></td>
+          <td>
+            <span style="<%= item.unit_price !== item.real_price ? 'color:var(--red);font-weight:700' : 'color:var(--text)' %>">
+              ₩<%= item.unit_price.toLocaleString() %>
+              <% if (item.unit_price !== item.real_price) { %><span class="vuln-tag" style="font-size:9px">조작!</span><% } %>
+            </span>
+          </td>
+          <td style="color:var(--text2);font-size:12px">₩<%= item.real_price.toLocaleString() %></td>
+          <td><%= item.quantity %></td>
+          <td style="color:var(--accent);font-weight:600">₩<%= (item.unit_price * item.quantity).toLocaleString() %></td>
+          <td>
+            <form method="POST" action="/shop/cart/remove" style="display:inline">
+              <input type="hidden" name="cart_id" value="<%= item.id %>">
+              <button type="submit" class="btn btn-danger btn-sm">삭제</button>
+            </form>
+          </td>
+        </tr>
+        <% }) %>
+      </table>
+      <div style="text-align:right;margin-top:16px;font-size:18px;font-weight:700">
+        합계: <span style="color:var(--accent)">₩<%= total.toLocaleString() %></span>
+      </div>
+    </div>
+
+    <!-- 주문 폼 (CSRF 취약) -->
+    <div class="card">
+      <div class="card-title">배송 정보 입력 <span class="vuln-tag">CSRF 토큰 없음</span></div>
+      <form method="POST" action="/shop/checkout">
+        <div class="form-group">
+          <label>수령인</label>
+          <input type="text" name="shipping_name" value="<%= user.username %>" required>
+        </div>
+        <div class="form-group">
+          <label>배송지 주소</label>
+          <input type="text" name="shipping_addr" placeholder="서울시 강남구 ..." required>
+        </div>
+        <div class="form-group">
+          <label>연락처</label>
+          <input type="text" name="shipping_phone" placeholder="010-0000-0000">
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--text2)">상품 합계</span>
+            <span>₩<%= total.toLocaleString() %></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="color:var(--text2)">배송비</span>
+            <span style="color:var(--accent)">무료</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;border-top:1px solid var(--border);padding-top:8px">
+            <span>결제금액</span>
+            <span style="color:var(--accent)">₩<%= total.toLocaleString() %></span>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">주문하기</button>
+      </form>
+    </div>
+  </div>
+  <% } %>
+</div>
+</body>
+</html>
