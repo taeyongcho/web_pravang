@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "onchain-viewer",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/dev/onchain-viewer/server.js"],
+      "port": 3300
+    }
+  ]
+}

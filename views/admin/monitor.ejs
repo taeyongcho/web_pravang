@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>강사 모니터링 - AXIO Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .stat-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+    .stat-box { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; }
+    .stat-box .num { font-size:26px; font-weight:700; color:var(--accent); }
+    .stat-box .lbl { font-size:12px; color:var(--text2); margin-top:2px; }
+
+    .trainee { border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:10px; background:var(--card); }
+    .trainee-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .trainee-name { font-weight:700; font-size:15px; }
+    .trainee-score { margin-left:auto; font-size:18px; font-weight:700; color:var(--accent); }
+    .mini-bar { background:var(--border); border-radius:99px; height:6px; overflow:hidden; flex:1; min-width:120px; max-width:260px; }
+    .mini-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:99px; }
+    .cat-dots { display:flex; gap:4px; flex-wrap:wrap; margin-top:10px; }
+    .cat-dot { font-size:10px; padding:2px 8px; border-radius:4px; border:1px solid var(--border); color:var(--text2); }
+    .cat-dot.done { background:rgba(0,200,150,.15); color:var(--accent); border-color:rgba(0,200,150,.3); }
+    .cat-dot.partial { background:rgba(0,132,255,.12); color:var(--accent2); border-color:rgba(0,132,255,.3); }
+    .stuck-tag { display:inline-block; font-size:10px; padding:2px 7px; border-radius:4px; background:rgba(245,158,11,.15); color:#f59e0b; margin:2px; }
+    .meta { font-size:11px; color:var(--text2); }
+    .danger-card { border:1px solid rgba(255,71,87,.3); border-radius:10px; padding:16px; background:rgba(255,71,87,.04); margin-top:24px; }
+  </style>
+</head>
+<body>
+<%- include('../partials/nav') %>
+<div class="container">
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+    <div class="page-title" style="margin:0">📊 강사 모니터링</div>
+    <a href="/admin" class="btn btn-secondary btn-sm">← 관리자</a>
+    <button onclick="location.reload()" class="btn btn-secondary btn-sm">🔄 새로고침</button>
+  </div>
+  <div style="color:var(--text2);font-size:13px;margin-bottom:20px">수강생별 실시간 진행 현황 · 점수(힌트 감점 반영) 순 정렬</div>
+
+  <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+
+  <%
+    const totalTrainees = trainees.length;
+    const activeTrainees = trainees.filter(t => t.solvedCount > 0).length;
+    const avgScore = totalTrainees ? Math.round(trainees.reduce((s,t)=>s+t.finalScore,0)/totalTrainees) : 0;
+    const completed = trainees.filter(t => t.solvedCount === totalChallenges).length;
+  %>
+  <div class="stat-row">
+    <div class="stat-box"><div class="num"><%= totalTrainees %></div><div class="lbl">전체 수강생</div></div>
+    <div class="stat-box"><div class="num"><%= activeTrainees %></div><div class="lbl">훈련 시작 (1문제 이상)</div></div>
+    <div class="stat-box"><div class="num"><%= avgScore.toLocaleString() %></div><div class="lbl">평균 점수 / <%= maxScore.toLocaleString() %></div></div>
+    <div class="stat-box"><div class="num"><%= completed %></div><div class="lbl">전체 완료</div></div>
+  </div>
+
+  <% if (trainees.length === 0) { %>
+  <div class="card" style="text-align:center;color:var(--text2);padding:40px">
+    아직 등록된 수강생(일반 계정)이 없습니다.
+  </div>
+  <% } else { %>
+  <% trainees.forEach(t => { %>
+  <div class="trainee">
+    <div class="trainee-head">
+      <span class="trainee-name"><%= t.username %></span>
+      <span class="meta"><%= t.solvedCount %>/<%= totalChallenges %>문제</span>
+      <div class="mini-bar"><div class="mini-bar-fill" style="width:<%= Math.round(t.solvedCount/totalChallenges*100) %>%"></div></div>
+      <% if (t.hintCount > 0) { %><span class="meta" style="color:var(--red)">💡 힌트 <%= t.hintCount %>회 (-<%= t.hintCount*10 %>pt)</span><% } %>
+      <span class="trainee-score"><%= t.finalScore.toLocaleString() %>pt</span>
+    </div>
+
+    <div class="cat-dots">
+      <% t.catProgress.forEach(cp => { %>
+      <span class="cat-dot <%= cp.done===cp.total ? 'done' : (cp.done>0 ? 'partial' : '') %>">
+        <%= cp.cat.split(' - ')[0] %> <%= cp.done %>/<%= cp.total %>
+      </span>
+      <% }) %>
+    </div>
+
+    <% if (t.stuck.length > 0) { %>
+    <div style="margin-top:8px">
+      <span class="meta">🚧 막힌 지점(힌트 봤지만 미해결): </span>
+      <% t.stuck.forEach(s => { %><span class="stuck-tag"><%= s %></span><% }) %>
+    </div>
+    <% } %>
+
+    <div class="meta" style="margin-top:8px">
+      마지막 풀이: <%= t.lastSolved ? t.lastSolved.slice(0,16) : '없음' %>
+      · 가입: <%= t.created_at ? t.created_at.slice(0,16) : '-' %>
+    </div>
+  </div>
+  <% }) %>
+  <% } %>
+
+  <!-- 회차별 DB 초기화 -->
+  <div class="danger-card">
+    <div style="font-weight:700;color:var(--red);margin-bottom:8px">⚠️ 회차별 훈련 데이터 초기화</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">
+      다음 교육 기수를 위해 훈련생 계정과 학습 기록을 삭제합니다.
+      <strong style="color:var(--text)">admin 계정과 기본 시드 데이터(alice/bob/charlie/testuser, 상품·공지)는 보존</strong>됩니다.
+    </p>
+    <form method="POST" action="/admin/reset-training" onsubmit="return confirm('정말 훈련 데이터를 초기화하시겠습니까? 되돌릴 수 없습니다.')">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px;cursor:pointer">
+        <input type="checkbox" name="full" value="1" style="width:auto">
+        <span>전체 학습 기록 리셋 (시드 유저 풀이·힌트·리뷰·주문·로그 포함)</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;cursor:pointer">
+        <input type="checkbox" name="reset_codes" value="1" style="width:auto">
+        <span>초대코드 사용 카운트/이력 리셋 (코드 자체는 유지)</span>
+      </label>
+      <button type="submit" class="btn btn-danger btn-sm">🗑️ 훈련 데이터 초기화</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

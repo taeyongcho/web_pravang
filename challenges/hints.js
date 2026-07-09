@@ -270,6 +270,48 @@ const challenges = [
       '장바구니에서 단가가 조작된 것을 확인할 수 있습니다.'
     ],
     flag: 'AXIO{shop_price_manipulation}'
+  },
+  {
+    id: 'A01-3',
+    category: 'A01 - Broken Access Control (API)',
+    title: 'API IDOR - 타인 잔액 조회',
+    description: 'API Key 인증만 통과하면 다른 사용자의 잔액도 조회됩니다. 다른 유저의 잔액을 읽어보세요.',
+    target: '/api/balance/:userId',
+    difficulty: 'easy',
+    hints: [
+      '/api/users 로 전체 유저와 api_key가 노출됩니다.',
+      '아무 api_key(x-api-key 헤더 또는 ?api_key=)로 인증한 뒤 userId만 바꿔보세요.',
+      'curl -H "x-api-key: sk-test-key-ghi012" http://localhost:3000/api/balance/1'
+    ],
+    flag: 'AXIO{api_idor_balance_leak}'
+  },
+  {
+    id: 'A05-2',
+    category: 'A05 - Security Misconfiguration (Open Redirect)',
+    title: 'Open Redirect - 로그인 리다이렉트 조작',
+    description: '로그인의 redirect 파라미터가 검증 없이 이동됩니다. 외부 사이트로 리다이렉트시켜보세요.',
+    target: '/login?redirect=',
+    difficulty: 'easy',
+    hints: [
+      '로그인 URL에 redirect 쿼리 파라미터를 붙여보세요.',
+      '/login?redirect=https://evil.example.com 형태로 접근 후 로그인해보세요.',
+      '서버가 redirect 값을 화이트리스트 검증 없이 그대로 302 이동시킵니다. 피싱에 악용 가능.'
+    ],
+    flag: 'AXIO{open_redirect_login_param}'
+  },
+  {
+    id: 'A08-2',
+    category: 'A08 - Software & Data Integrity (CSRF)',
+    title: 'CSRF - 위조 요청으로 송금',
+    description: '송금 기능에 CSRF 토큰이 없습니다. 피해자가 악성 페이지만 열어도 송금이 발생하는 것을 확인하세요.',
+    target: '/dashboard/transfer',
+    difficulty: 'medium',
+    hints: [
+      '송금 POST 요청에 CSRF 토큰이나 Referer 검증이 없습니다.',
+      '외부 사이트에 자동 제출 폼(<form action=".../dashboard/transfer">)을 심으면 로그인된 피해자가 송금됩니다.',
+      '/challenges/csrf-poc 에서 개념 증명(PoC) 페이지를 확인할 수 있습니다.'
+    ],
+    flag: 'AXIO{csrf_forged_transfer_no_token}'
   }
 ];
 

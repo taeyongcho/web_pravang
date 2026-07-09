@@ -5,7 +5,8 @@ const { get, run, rawQuery, saveDb } = require('../database/db');
 // 로그인 페이지
 router.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/dashboard');
-  res.render('login', { error: null, user: null, attemptCount: 0 });
+  // OpenRedirect: redirect 파라미터를 검증 없이 폼에 실어 나름
+  res.render('login', { error: null, user: null, attemptCount: 0, redirect: req.query.redirect || '' });
 });
 
 // A03: SQL Injection - 로그인 쿼리를 문자열 연결로 구성
@@ -49,6 +50,11 @@ router.post('/login', (req, res) => {
       role: user.role,
       email: user.email
     };
+    // OpenRedirect: redirect 값 검증 없이 그대로 이동 (외부 URL로도 리다이렉트됨)
+    const dest = req.body.redirect;
+    if (dest && dest.trim()) {
+      return res.redirect(dest);
+    }
     return res.redirect('/dashboard');
   }
 
@@ -62,7 +68,8 @@ router.post('/login', (req, res) => {
     error: '아이디 또는 비밀번호가 올바르지 않습니다.',
     user: null,
     debugQuery: query,  // A05: 디버그 정보 노출
-    attemptCount
+    attemptCount,
+    redirect: req.body.redirect || ''
   });
 });
 

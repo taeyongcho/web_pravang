@@ -188,6 +188,19 @@
           <% ch.hints.forEach(h => { %><li><%= h %></li><% }) %>
         </ol>
       </details>
+      <% if (typeof writeups !== 'undefined' && writeups && writeups[ch.id]) { %>
+      <details style="margin-top:6px" open>
+        <summary style="cursor:pointer;font-size:12px;color:var(--accent);user-select:none;font-weight:600">📖 풀이 해설 (Write-up)</summary>
+        <div style="margin:8px 0 0;padding:12px 14px;background:rgba(0,200,150,.04);border:1px solid rgba(0,200,150,.15);border-radius:8px">
+          <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">공격 과정</div>
+          <ol style="margin:0 0 10px 16px;color:var(--text);font-size:12px;line-height:1.9">
+            <% writeups[ch.id].steps.forEach(s => { %><li><%= s %></li><% }) %>
+          </ol>
+          <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">🛡️ 방어 방법</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.7"><%= writeups[ch.id].defense %></div>
+        </div>
+      </details>
+      <% } %>
       <% } %>
 
       <details style="margin-top:6px">

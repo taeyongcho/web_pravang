@@ -3,6 +3,7 @@ const router = express.Router();
 const { get, all, run, saveDb } = require('../database/db');
 const { requireLogin } = require('../middleware/auth');
 const challenges = require('../challenges/hints');
+const writeups = require('../challenges/writeups');
 
 const SCORE = { easy: 100, medium: 300, hard: 500 };
 
@@ -24,8 +25,13 @@ router.get('/', (req, res) => {
   const maxScore = challenges.reduce((t, c) => t + (SCORE[c.difficulty] || 100), 0);
   res.render('challenges', {
     challenges, solvedIds, user: req.session.user || null,
-    submitResult: null, myScore, maxScore, SCORE
+    submitResult: null, myScore, maxScore, SCORE, writeups
   });
+});
+
+// CSRF 개념증명(PoC) 페이지 - 자동 제출 폼으로 위조 송금 시연
+router.get('/csrf-poc', (req, res) => {
+  res.render('challenges/csrf-poc', { user: req.session.user || null });
 });
 
 // FLAG 제출
@@ -68,7 +74,7 @@ router.post('/submit', requireLogin, (req, res) => {
 
   res.render('challenges', {
     challenges, solvedIds, user: req.session.user,
-    submitResult, myScore, maxScore, SCORE
+    submitResult, myScore, maxScore, SCORE, writeups
   });
 });
 
